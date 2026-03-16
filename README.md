@@ -1,4 +1,4 @@
 # Aplikacja studentów dla studentów
-# Miejsca okolic SGGW
 
+## Miejsca okolic SGGW
 ## Have fun in Warsaw
