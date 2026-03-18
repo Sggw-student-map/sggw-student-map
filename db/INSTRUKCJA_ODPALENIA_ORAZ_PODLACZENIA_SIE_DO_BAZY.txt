@@ -1,0 +1,29 @@
+Oczywiscie kazdy musi miec zainstalowanego dockera
+
+1) otwórz terminal w folderze /db 
+2) utworzenie obrazu: docker build -t sggw-student-map-db 
+3) odpalenie kontenera: 
+
+docker run --name sggw-student-map-db-container `
+  -p 5432:5432 `
+  -e POSTGRES_PASSWORD=postgres `
+  -d sggw-student-map-db
+
+Zapamiętać: 
+Host: localhost
+Port: 5432
+Database: sggw-student-map
+User: postgres
+Password: postgres
+
+4) można sprawdzić czy działa
+docker ps
+
+5) Podłączenie się do bazy
+korzystając z DBeaver (jeśli korzystacie z czegos innego to spoko np. DataGrip, psql)
+
+New Database Connection -> PostgreSQL
+Wpisać Hosta itd. te rzeczy co na górze (Pamiętać aby zmienić db na sggw_student_map)
+-> Test Connection
+
+6) Powinno wszystko śmigać i na Docker Desktop w zakładce containers powinien być odpalony kontener z bazą danych.
