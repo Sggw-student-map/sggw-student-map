@@ -6,23 +6,23 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "miejsca")
+@Table(name = "places")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Miejsce {
+public class Place {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_miejsca")
-    private Integer idMiejsca;
+    private Integer id;
 
     @Column(name = "nazwa", nullable = false, length = 255)
-    private String nazwa;
+    private String name;
 
     @Column(name = "szer_geo", nullable = false)
-    private Double szerGeo;
+    private Double latitude;
 
     @Column(name = "dl_geo", nullable = false)
-    private Double dlGeo;
+    private Double longitude;
 }

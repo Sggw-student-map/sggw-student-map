@@ -6,28 +6,28 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "recenzje")
+@Table(name = "reviews")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Recenzja {
+public class Review {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_rec")
-    private Integer idRec;
+    private Integer id;
 
     @ManyToOne
     @JoinColumn(name = "id_miejsca", nullable = false)
-    private Miejsce miejsce;
+    private Place place;
 
     @ManyToOne
     @JoinColumn(name = "id_uzytk", nullable = false)
-    private Uzytkownik uzytkownik;
+    private User user;
 
     @Column(name = "ocena")
-    private Integer ocena;
+    private Integer rating;
 
     @Column(name = "komentarz")
-    private String komentarz;
+    private String comment;
 }

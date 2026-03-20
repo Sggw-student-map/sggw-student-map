@@ -6,18 +6,18 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "trasa")
+@Table(name = "routes")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Trasa {
+public class Route {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_trasy")
-    private Integer idTrasy;
+    private Integer id;
 
     @ManyToOne
     @JoinColumn(name = "id_miejsca", nullable = false)
-    private Miejsce miejsce;
+    private Place place;
 }

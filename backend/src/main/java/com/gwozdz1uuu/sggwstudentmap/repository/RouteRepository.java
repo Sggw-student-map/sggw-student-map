@@ -1,9 +1,9 @@
 package com.gwozdz1uuu.sggwstudentmap.repository;
 
-import com.gwozdz1uuu.sggwstudentmap.entity.Recenzja;
+import com.gwozdz1uuu.sggwstudentmap.entity.Route;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface RecenzjaRepository extends JpaRepository<Recenzja, Integer> {
+public interface RouteRepository extends JpaRepository<Route, Integer> {
 }
