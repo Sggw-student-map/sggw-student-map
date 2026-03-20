@@ -14,15 +14,15 @@ public class Place {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_miejsca")
+    @Column(name = "id")
     private Integer id;
 
-    @Column(name = "nazwa", nullable = false, length = 255)
+    @Column(name = "name", nullable = false, length = 255)
     private String name;
 
-    @Column(name = "szer_geo", nullable = false)
+    @Column(name = "latitude", nullable = false)
     private Double latitude;
 
-    @Column(name = "dl_geo", nullable = false)
+    @Column(name = "longitude", nullable = false)
     private Double longitude;
 }

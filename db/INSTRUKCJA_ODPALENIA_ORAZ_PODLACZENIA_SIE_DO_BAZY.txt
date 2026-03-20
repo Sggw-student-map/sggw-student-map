@@ -1,29 +1,40 @@
-Oczywiscie kazdy musi miec zainstalowanego dockera
+Oczywiscie kazdy musi miec zainstalowanego Dockera.
 
-1) otwórz terminal w folderze /db 
-2) utworzenie obrazu: docker build -t sggw-student-map-db 
-3) odpalenie kontenera: 
+=== URUCHOMIENIE BAZY DANYCH ===
 
-docker run --name sggw-student-map-db-container `
-  -p 5432:5432 `
-  -e POSTGRES_PASSWORD=postgres `
-  -d sggw-student-map-db
+1) Otwórz terminal w folderze /db
 
-Zapamiętać: 
-Host: localhost
-Port: 5432
-Database: sggw-student-map
-User: postgres
+2) Uruchom kontener jedną komendą:
+
+   docker compose up -d
+
+3) Sprawdź czy działa:
+
+   docker compose ps
+
+   lub w Docker Desktop w zakładce Containers powinien być widoczny
+   kontener "sggw-student-map-db-container" ze statusem "running".
+
+=== DANE POŁĄCZENIA ===
+
+Host:     localhost
+Port:     5432
+Database: sggw_student_map
+User:     postgres
 Password: postgres
 
-4) można sprawdzić czy działa
-docker ps
-
-5) Podłączenie się do bazy
-korzystając z DBeaver (jeśli korzystacie z czegos innego to spoko np. DataGrip, psql)
+=== PODŁĄCZENIE DO BAZY (DBeaver / DataGrip / psql) ===
 
 New Database Connection -> PostgreSQL
-Wpisać Hosta itd. te rzeczy co na górze (Pamiętać aby zmienić db na sggw_student_map)
--> Test Connection
+Wpisz dane połączenia z sekcji powyżej -> Test Connection
 
-6) Powinno wszystko śmigać i na Docker Desktop w zakładce containers powinien być odpalony kontener z bazą danych.
+=== ZATRZYMANIE KONTENERA ===
+
+   docker compose down
+
+Uwaga: dane bazy są zachowane po zatrzymaniu (volume).
+Jeśli chcesz wyczyścić bazę całkowicie (np. zresetować schemat):
+
+   docker compose down -v
+   docker compose up -d
+

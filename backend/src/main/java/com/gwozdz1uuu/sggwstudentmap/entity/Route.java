@@ -14,10 +14,10 @@ public class Route {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_trasy")
+    @Column(name = "id")
     private Integer id;
 
     @ManyToOne
-    @JoinColumn(name = "id_miejsca", nullable = false)
+    @JoinColumn(name = "place_id", nullable = false)
     private Place place;
 }

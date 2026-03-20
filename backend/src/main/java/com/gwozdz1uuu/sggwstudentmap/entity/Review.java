@@ -14,20 +14,20 @@ public class Review {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_rec")
+    @Column(name = "id")
     private Integer id;
 
     @ManyToOne
-    @JoinColumn(name = "id_miejsca", nullable = false)
+    @JoinColumn(name = "place_id", nullable = false)
     private Place place;
 
     @ManyToOne
-    @JoinColumn(name = "id_uzytk", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(name = "ocena")
+    @Column(name = "rating")
     private Integer rating;
 
-    @Column(name = "komentarz")
+    @Column(name = "comment")
     private String comment;
 }

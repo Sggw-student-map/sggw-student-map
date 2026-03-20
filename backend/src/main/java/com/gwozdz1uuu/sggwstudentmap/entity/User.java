@@ -16,13 +16,13 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_uzytk")
+    @Column(name = "id")
     private Integer id;
 
-    @Column(name = "imie", length = 100)
+    @Column(name = "first_name", length = 100)
     private String firstName;
 
-    @Column(name = "nazwisko", length = 100)
+    @Column(name = "last_name", length = 100)
     private String lastName;
 
     @Column(name = "username", unique = true, length = 100)

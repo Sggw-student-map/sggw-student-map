@@ -1,0 +1,15 @@
+services:
+  db:
+    build: .
+    container_name: sggw-student-map-db-container
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: sggw_student_map
+    volumes:
+      - sggw_db_data:/var/lib/postgresql/data
+
+volumes:
+  sggw_db_data:

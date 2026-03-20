@@ -1,48 +1,54 @@
--- Tworzenie bazy danych
-CREATE DATABASE sggw_student_map;
-
--- Połączenie z bazą
-\c sggw_student_map;
-
--- Tabela: uzytkownicy
-CREATE TABLE uzytkownicy (
-    id_uzytk SERIAL PRIMARY KEY
+-- Tabela: users
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    username VARCHAR(100) UNIQUE,
+    password VARCHAR(255),
+    email VARCHAR(255) UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_active BOOLEAN DEFAULT true
 );
 
--- Tabela: miejsca
-CREATE TABLE miejsca (
-    id_miejsca SERIAL PRIMARY KEY,
-    nazwa VARCHAR(255) NOT NULL,
-    szer_geo FLOAT NOT NULL,
-    dl_geo FLOAT NOT NULL
+-- Tabela: places
+CREATE TABLE places (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    latitude FLOAT NOT NULL,
+    longitude FLOAT NOT NULL
 );
 
--- Tabela: recenzje
-CREATE TABLE recenzje (
-    id_rec SERIAL PRIMARY KEY,
-    id_miejsca INT NOT NULL,
-    id_uzytk INT NOT NULL,
-    ocena INT CHECK (ocena >= 1 AND ocena <= 5),
-    komentarz TEXT,
+-- Tabela: reviews
+CREATE TABLE reviews (
+    id SERIAL PRIMARY KEY,
+    place_id INT NOT NULL,
+    user_id INT NOT NULL,
+    rating INT CHECK (rating >= 1 AND rating <= 5),
+    comment TEXT,
 
-    CONSTRAINT fk_miejsca
-        FOREIGN KEY(id_miejsca)
-        REFERENCES miejsca(id_miejsca)
+    CONSTRAINT fk_reviews_place
+        FOREIGN KEY(place_id)
+        REFERENCES places(id)
         ON DELETE CASCADE,
 
-    CONSTRAINT fk_uzytk
-        FOREIGN KEY(id_uzytk)
-        REFERENCES uzytkownicy(id_uzytk)
+    CONSTRAINT fk_reviews_user
+        FOREIGN KEY(user_id)
+        REFERENCES users(id)
         ON DELETE CASCADE
 );
 
--- Tabela: trasa
-CREATE TABLE trasa (
-    id_trasy SERIAL PRIMARY KEY,
-    id_miejsca INT NOT NULL,
+-- Tabela: routes
+CREATE TABLE routes (
+    id SERIAL PRIMARY KEY,
+    place_id INT NOT NULL,
 
-    CONSTRAINT fk_trasa_miejsca
-        FOREIGN KEY(id_miejsca)
-        REFERENCES miejsca(id_miejsca)
+    CONSTRAINT fk_routes_place
+        FOREIGN KEY(place_id)
+        REFERENCES places(id)
         ON DELETE CASCADE
 );
+
+-- Indeksy
+CREATE INDEX idx_users_username ON users(username);
+CREATE INDEX idx_users_email ON users(email);
