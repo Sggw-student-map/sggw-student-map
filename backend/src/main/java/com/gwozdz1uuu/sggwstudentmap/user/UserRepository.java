@@ -1,6 +1,5 @@
-package com.gwozdz1uuu.sggwstudentmap.repository;
+package com.gwozdz1uuu.sggwstudentmap.user;
 
-import com.gwozdz1uuu.sggwstudentmap.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
