@@ -1,5 +1,6 @@
 package com.gwozdz1uuu.sggwstudentmap.entity;
 
+import com.gwozdz1uuu.sggwstudentmap.place.Place;
 import com.gwozdz1uuu.sggwstudentmap.user.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
