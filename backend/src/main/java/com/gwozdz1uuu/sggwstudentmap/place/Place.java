@@ -1,4 +1,4 @@
-package com.gwozdz1uuu.sggwstudentmap.entity;
+package com.gwozdz1uuu.sggwstudentmap.place;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
