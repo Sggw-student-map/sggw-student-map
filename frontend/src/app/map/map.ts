@@ -1,6 +1,7 @@
 import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import * as L from 'leaflet';
+import { PlacePin, PlaceService } from '../core/place.service';
 
 @Component({
   selector: 'app-map',
@@ -11,6 +12,7 @@ import * as L from 'leaflet';
 })
 export class Map implements OnInit, AfterViewInit {
   private map!: L.Map;
+  private markerLayer = L.layerGroup();
 
   menuItems = [
     { name: 'Feed', color: 'bg-sky-200 text-sky-700' },
@@ -20,13 +22,36 @@ export class Map implements OnInit, AfterViewInit {
     { name: 'Powiadomienia', color: 'bg-yellow-200 text-yellow-700' }
   ];
 
-  constructor() {}
+  constructor(private readonly placeService: PlaceService) {}
 
   ngOnInit(): void {}
 
   ngAfterViewInit(): void {
     this.initMap();
-    this.addStaticMarkers();
+    this.loadPins();
+  }
+
+  private loadPins(): void {
+    const blueIcon = L.icon({
+      iconUrl: '/blue-mark.svg',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34]
+    });
+
+    this.placeService.getPins().subscribe({
+      next: (pins: PlacePin[]) => {
+        this.markerLayer.clearLayers();
+        pins.forEach((pin) => {
+          L.marker([pin.latitude, pin.longitude], { icon: blueIcon })
+            .bindPopup(`<b>${pin.name}</b>`)
+            .addTo(this.markerLayer);
+        });
+      },
+      error: () => {
+        this.markerLayer.clearLayers();
+      }
+    });
   }
 
   private initMap(): void {
@@ -49,25 +74,6 @@ export class Map implements OnInit, AfterViewInit {
       maxZoom: 18
     }).addTo(this.map);
 
-  }
-
-  private addStaticMarkers(): void {
-    const blueIcon = L.icon({
-      iconUrl: '/blue-mark.svg',
-      iconSize: [25, 41],
-      iconAnchor: [12, 41],
-      popupAnchor: [1, -34]
-    });
-
-    const purpleIcon = L.icon({
-      iconUrl: '/purple-mark.svg',
-      iconSize: [25, 41],
-      iconAnchor: [12, 41],
-      popupAnchor: [1, -34]
-    });
-
-    L.marker([52.1625, 21.045], { icon: blueIcon }).addTo(this.map);
-    L.marker([52.161, 21.049], { icon: blueIcon }).addTo(this.map);
-    L.marker([52.163, 21.047], { icon: purpleIcon }).addTo(this.map).bindPopup('<b>Kawiarnia</b>');
+    this.markerLayer.addTo(this.map);
   }
 }

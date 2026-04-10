@@ -4,20 +4,26 @@ package com.gwozdz1uuu.sggwstudentmap.auth;
 import com.gwozdz1uuu.sggwstudentmap.auth.jwt.JwtConfig;
 import com.gwozdz1uuu.sggwstudentmap.auth.jwt.JwtResponse;
 import com.gwozdz1uuu.sggwstudentmap.auth.login.LoginRequest;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@AllArgsConstructor
+@RequiredArgsConstructor
 @RequestMapping("/auth")
 @RestController
 public class AuthController {
     private final JwtConfig jwtConfig;
     private final UserMapper userMapper;
     private final AuthService authService;
+    @Value("${app.auth.refresh-cookie-secure:true}")
+    private boolean refreshCookieSecure;
+    @Value("${app.auth.refresh-cookie-same-site:Lax}")
+    private String refreshCookieSameSite;
 
     @PostMapping("/login")
     public JwtResponse login(
@@ -27,12 +33,14 @@ public class AuthController {
         var loginResult = authService.login(request);
 
         var refreshToken = loginResult.getRefreshToken().toString();
-        var cookie = new Cookie("refreshToken", refreshToken);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/auth/refresh");
-        cookie.setMaxAge(jwtConfig.getRefreshTokenExpiration()); //7 dni
-        cookie.setSecure(true);
-        response.addCookie(cookie);
+        var cookie = ResponseCookie.from("refreshToken", refreshToken)
+                .httpOnly(true)
+                .path("/auth/refresh")
+                .maxAge(jwtConfig.getRefreshTokenExpiration())
+                .secure(refreshCookieSecure)
+                .sameSite(refreshCookieSameSite)
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
         var jwtResponse = new JwtResponse();
         jwtResponse.setToken(loginResult.getAccessToken().toString());
