@@ -15,8 +15,8 @@ public class AuthSecurityRules implements SecurityRules {
     public void configure(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry registry) {
         registry
                 .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
-                .requestMatchers(HttpMethod.POST, "/auth/me").permitAll()
                 .requestMatchers(HttpMethod.POST, "/auth/refresh").permitAll()
+                .requestMatchers(HttpMethod.GET, "/auth/me").authenticated()
                 .requestMatchers(HttpMethod.POST, "/users").permitAll();
 
     }
