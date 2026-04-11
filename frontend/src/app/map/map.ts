@@ -2,11 +2,12 @@ import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import * as L from 'leaflet';
 import { PlacePin, PlaceService } from '../core/place.service';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-map',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule,RouterModule],
   templateUrl: './map.html',
   styleUrl: './map.css',
 })
@@ -17,7 +18,7 @@ export class Map implements OnInit, AfterViewInit {
   menuItems = [
     { name: 'Feed', color: 'bg-sky-200 text-sky-700' },
     { name: 'Wydarzenia', color: 'bg-green-200 text-green-700' },
-    { name: 'Opinie', color: 'bg-pink-200 text-pink-700' },
+    { name: 'Opinie', color: 'bg-pink-200 text-pink-700' ,route: '/opinions'},
     { name: 'Znajomi', color: 'bg-orange-200 text-orange-700' },
     { name: 'Powiadomienia', color: 'bg-yellow-200 text-yellow-700' }
   ];

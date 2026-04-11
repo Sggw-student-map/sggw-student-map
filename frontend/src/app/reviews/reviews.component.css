@@ -1,0 +1,25 @@
+.reviews-panel { padding: 12px; max-width: 360px; }
+
+.average-rating { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.stars { color: #f59e0b; font-size: 1.1rem; }
+.stars.small { font-size: 0.9rem; }
+.avg-label { font-weight: 600; }
+.count { color: #6b7280; font-size: 0.85rem; }
+
+.review-list { max-height: 240px; overflow-y: auto; margin-bottom: 16px; }
+.review-card { background: #f9fafb; border-radius: 8px; padding: 10px; margin-bottom: 8px; }
+.review-header { display: flex; justify-content: space-between; margin-bottom: 4px; }
+.author { font-weight: 600; font-size: 0.9rem; }
+.comment { margin: 0; font-size: 0.875rem; color: #374151; }
+.no-reviews { color: #9ca3af; text-align: center; }
+
+.add-review h4 { margin: 0 0 8px; font-size: 0.95rem; }
+.star-picker span { font-size: 1.6rem; cursor: pointer; color: #d1d5db; transition: color 0.15s; }
+.star-picker span.active { color: #f59e0b; }
+
+textarea { width: 100%; margin-top: 8px; padding: 8px; border-radius: 6px;
+           border: 1px solid #d1d5db; font-size: 0.875rem; resize: vertical; box-sizing: border-box; }
+
+button { margin-top: 8px; width: 100%; padding: 9px; background: #7c3aed;
+         color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+button:disabled { background: #c4b5fd; cursor: not-allowed; }
