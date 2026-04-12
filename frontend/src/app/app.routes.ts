@@ -3,6 +3,7 @@ import { Login } from './login/login';
 import { Map } from './map/map';
 import { Register } from './register/register';
 import { OpinionsPageComponent } from './reviews/opinions-page.component';
+import { FriendsComponent } from './friends/friends.component';
 
 
 export const routes: Routes = [
@@ -11,5 +12,6 @@ export const routes: Routes = [
     { path: 'register', component: Register },
     { path: 'map', component: Map },
     { path: 'opinions', component: OpinionsPageComponent },
+    { path: 'friends', component: FriendsComponent },
     { path: '**', redirectTo: 'login' }
 ];
