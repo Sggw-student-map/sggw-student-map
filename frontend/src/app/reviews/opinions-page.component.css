@@ -246,6 +246,20 @@
   color: #111827;
 }
 
+.place-select {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  background: #f9fafb;
+  color: #111827;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.place-select:focus { border-color: #A855F7; }
+
 .star-picker {
   display: flex;
   gap: 8px;

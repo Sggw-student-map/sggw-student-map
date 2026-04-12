@@ -53,22 +53,9 @@
           <div *ngIf="!review.placeImage" class="thumb-placeholder"></div>
         </div>
         <div class="review-body">
-          <p class="place-name">{{ review.placeName }}</p>
+          <p class="place-name">{{ getPlaceName(review.placeId) }}</p>
           <p class="review-text">"{{ review.comment }}"</p>
         </div>
-      </div>
-
-      <div class="card-footer">
-        <button class="vote-btn" [class.liked]="review.userLiked"
-                (click)="toggleLike(review)">
-          ♥ {{ review.likes }}
-        </button>
-        <button class="vote-btn" (click)="toggleDislike(review)">
-          👎 {{ review.dislikes }}
-        </button>
-        <input class="comment-input" placeholder="Skomentuj..."
-               [(ngModel)]="review.newComment"
-               (keyup.enter)="postComment(review)" />
       </div>
     </div>
   </main>
@@ -78,6 +65,11 @@
 <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
   <div class="modal" (click)="$event.stopPropagation()">
     <h3>Dodaj opinię</h3>
+    <select [(ngModel)]="modalPlaceId" class="place-select">
+      <option [ngValue]="null" disabled selected>Wybierz miejsce...</option>
+      <option *ngFor="let place of places" [ngValue]="place.id">{{ place.name }}</option>
+    </select>
+
     <div class="star-picker">
       <span *ngFor="let s of [1,2,3,4,5]"
             [class.active]="s <= (hovered || modalRating)"
@@ -91,7 +83,7 @@
     <div class="modal-actions">
       <button class="btn-cancel" (click)="closeModal()">Anuluj</button>
       <button class="btn-submit"
-              [disabled]="!modalRating || !modalComment.trim()"
+              [disabled]="!modalRating || !modalComment.trim() || !modalPlaceId"
               (click)="submitReview()">Wyślij</button>
     </div>
   </div>

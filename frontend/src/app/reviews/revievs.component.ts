@@ -11,12 +11,6 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './reviews.component.html',
   styleUrls: ['./reviews.component.css']
 })
-
-@Component({
-  selector: 'app-reviews',
-  templateUrl: './reviews.component.html',
-  styleUrls: ['./reviews.component.css']
-})
 export class ReviewsComponent implements OnInit {
   @Input() placeId!: number;
 

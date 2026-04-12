@@ -5,7 +5,7 @@ import { Review } from './review.model';
 
 @Injectable({ providedIn: 'root' })
 export class ReviewsService {
-  private apiUrl = 'http://localhost:8080/api';
+  private apiUrl = '/api'; // Using relative path avoids CORS preflight 401 issues
 
   constructor(private http: HttpClient) {}
 
