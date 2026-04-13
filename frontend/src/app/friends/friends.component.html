@@ -1,0 +1,90 @@
+<div class="friends-container">
+
+  <!-- Back Navigation -->
+  <button class="btn back-btn" (click)="goToMainPage()">
+    &larr; Back to Map
+  </button>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button [class.active]="activeTab === 'friends'" (click)="setTab('friends')">
+      Znajomi ({{ friends.length }})
+    </button>
+    <button [class.active]="activeTab === 'received'" (click)="setTab('received')">
+      Zaproszenia ({{ pendingReceived.length }})
+    </button>
+    <button [class.active]="activeTab === 'sent'" (click)="setTab('sent')">
+      Wysłane ({{ pendingSent.length }})
+    </button>
+    <button [class.active]="activeTab === 'invite'" (click)="setTab('invite')">
+      Dodaj znajomego
+    </button>
+  </div>
+
+  <!-- Flash message -->
+  <p class="message" *ngIf="message">{{ message }}</p>
+
+  <!-- Friends list -->
+  <div *ngIf="activeTab === 'friends'">
+    <p *ngIf="friends.length === 0" class="empty">Nie masz jeszcze znajomych.</p>
+    <div class="user-card" *ngFor="let f of friends">
+      <div class="user-info">
+        <span class="avatar">{{ f.user.username[0].toUpperCase() }}</span>
+        <div>
+          <strong>{{ f.user.firstName }} {{ f.user.lastName }}</strong>
+          <small>&#64;{{ f.user.username }}</small>
+        </div>
+      </div>
+      <button class="btn danger" (click)="removeFriend(f.user.id)">Usuń</button>
+    </div>
+  </div>
+
+  <!-- Received invites -->
+  <div *ngIf="activeTab === 'received'">
+    <p *ngIf="pendingReceived.length === 0" class="empty">Brak oczekujących zaproszeń.</p>
+    <div class="user-card" *ngFor="let f of pendingReceived">
+      <div class="user-info">
+        <span class="avatar">{{ f.user.username[0].toUpperCase() }}</span>
+        <div>
+          <strong>{{ f.user.firstName }} {{ f.user.lastName }}</strong>
+          <small>&#64;{{ f.user.username }}</small>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn success" (click)="accept(f.user.id)">Akceptuj</button>
+        <button class="btn danger" (click)="reject(f.user.id)">Odrzuć</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sent invites -->
+  <div *ngIf="activeTab === 'sent'">
+    <p *ngIf="pendingSent.length === 0" class="empty">Nie wysłałeś żadnych zaproszeń.</p>
+    <div class="user-card" *ngFor="let f of pendingSent">
+      <div class="user-info">
+        <span class="avatar">{{ f.user.username[0].toUpperCase() }}</span>
+        <div>
+          <strong>{{ f.user.firstName }} {{ f.user.lastName }}</strong>
+          <small>&#64;{{ f.user.username }}</small>
+        </div>
+      </div>
+      <button class="btn danger" (click)="cancelInvite(f.user.id)">Anuluj</button>
+    </div>
+  </div>
+
+  <!-- Invite new friends -->
+  <div *ngIf="activeTab === 'invite'">
+    <p *ngIf="invitableUsers.length === 0" class="empty">Wszyscy użytkownicy są już Twoimi znajomymi.</p>
+    <div class="user-card" *ngFor="let u of invitableUsers">
+      <div class="user-info">
+        <span class="avatar">{{ u.username[0].toUpperCase() }}</span>
+        <div>
+          <strong>{{ u.firstName }} {{ u.lastName }}</strong>
+          <small>&#64;{{ u.username }}</small>
+        </div>
+      </div>
+      <button class="btn primary" (click)="sendInvite(u.id)">Zaproś</button>
+    </div>
+  </div>
+
+</div>

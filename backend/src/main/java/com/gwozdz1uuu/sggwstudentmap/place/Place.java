@@ -25,4 +25,7 @@ public class Place {
 
     @Column(name = "longitude", nullable = false)
     private Double longitude;
+
+    @Column(name = "description", length = 1000)
+    private String description;
 }

@@ -4,60 +4,68 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
 public class PlaceService {
+    private static final String GOOGLE_MAPS_DIR_BASE = "https://www.google.com/maps/dir/?api=1";
 
     private final PlaceRepository placeRepository;
 
-    public List<PlaceResponse> getAllPlaces() {
-        return placeRepository.findAll()
-                .stream()
-                .map(PlaceResponse::from)
-                .toList();
+    public List<Place> getAllPlaces() {
+        return placeRepository.findAll();
     }
 
-    public PlaceResponse getPlaceById(Integer id) {
-        return placeRepository.findById(id)
-                .map(PlaceResponse::from)
-                .orElseThrow(() -> new PlaceNotFoundException(id));
+    public Optional<Place> getPlaceById(Integer id) {
+        return placeRepository.findById(id);
     }
 
-    public PlaceResponse getPlaceByName(String name) {
-        return placeRepository.findByName(name)
-                .map(PlaceResponse::from)
-                .orElseThrow(() -> new PlaceNotFoundException(name));
-    }
-
-    public List<PlaceResponse> getPlacesByPattern(String pattern) {
-        return placeRepository.findByNameContainingIgnoreCase(pattern)
-                .stream()
-                .map(PlaceResponse::from)
-                .toList();
-    }
-
-    public PlaceResponse createPlace(PlaceRequest request) {
+    public Place createPlace(CreatePlaceRequest request) {
         Place place = new Place();
-        place.setName(request.name());
-        place.setLatitude(request.latitude());
-        place.setLongitude(request.longitude());
-        return PlaceResponse.from(placeRepository.save(place));
+        place.setName(request.getName());
+        place.setLatitude(request.getLatitude());
+        place.setLongitude(request.getLongitude());
+        place.setDescription(request.getDescription());
+        return placeRepository.save(place);
     }
 
-    public PlaceResponse updatePlace(Integer id, PlaceRequest request) {
-        Place place = placeRepository.findById(id)
-                .orElseThrow(() -> new PlaceNotFoundException(id));
-        place.setName(request.name());
-        place.setLatitude(request.latitude());
-        place.setLongitude(request.longitude());
-        return PlaceResponse.from(placeRepository.save(place));
+    public Optional<Place> updatePlace(Integer id, CreatePlaceRequest request) {
+        return placeRepository.findById(id).map(existing -> {
+            existing.setName(request.getName());
+            existing.setLatitude(request.getLatitude());
+            existing.setLongitude(request.getLongitude());
+            existing.setDescription(request.getDescription());
+            return placeRepository.save(existing);
+        });
     }
 
-    public void deletePlace(Integer id) {
-        if (!placeRepository.existsById(id)) {
-            throw new PlaceNotFoundException(id);
+    public boolean deletePlace(Integer id) {
+        if (placeRepository.existsById(id)) {
+            placeRepository.deleteById(id);
+            return true;
         }
-        placeRepository.deleteById(id);
+        return false;
+    }
+
+    public Optional<NavigationResponse> getNavigation(Integer placeId) {
+        return placeRepository.findById(placeId).map(place -> {
+            String googleMapsUrl = String.format(
+                    Locale.US,
+                    "%s&destination=%f,%f&travelmode=walking",
+                    GOOGLE_MAPS_DIR_BASE,
+                    place.getLatitude(),
+                    place.getLongitude()
+            );
+
+            return new NavigationResponse(
+                    place.getId(),
+                    place.getName(),
+                    place.getLatitude(),
+                    place.getLongitude(),
+                    googleMapsUrl
+            );
+        });
     }
 }

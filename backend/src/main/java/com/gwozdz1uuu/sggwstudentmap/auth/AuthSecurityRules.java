@@ -17,7 +17,15 @@ public class AuthSecurityRules implements SecurityRules {
                 .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
                 .requestMatchers(HttpMethod.POST, "/auth/refresh").permitAll()
                 .requestMatchers(HttpMethod.GET, "/auth/me").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/reviews", "/api/reviews/**").permitAll()
+                .requestMatchers(HttpMethod.OPTIONS, "/api/reviews", "/api/reviews/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/users").permitAll();
 
     }
 }
+
+
+
+// @Configuration
+// @EnableMethodSecurity
+// public class MethodSecurityConfig {}

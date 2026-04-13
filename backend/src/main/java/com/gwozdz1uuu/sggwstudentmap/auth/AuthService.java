@@ -41,8 +41,18 @@ public class AuthService {
             try {
                 userId = Integer.parseInt(text);
             } catch (NumberFormatException ex) {
+                var userByUsername = userRepository.findByUsername(text);
+                if (userByUsername != null) {
+                    return userByUsername;
+                }
                 return null;
             }
+        } else if (principal instanceof User user) {
+            return user;
+        } else if (principal instanceof org.springframework.security.core.userdetails.UserDetails userDetails) {
+            return userRepository.findByUsername(userDetails.getUsername());
+        } else if (principal instanceof Jwt customJwt) {
+            userId = Math.toIntExact(customJwt.getUserId());
         } else {
             return null;
         }

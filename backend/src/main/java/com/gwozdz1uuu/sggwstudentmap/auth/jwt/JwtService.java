@@ -5,10 +5,12 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class JwtService {
@@ -39,6 +41,7 @@ public class JwtService {
             return new Jwt(claims, jwtConfig.getSecretKey());
         }
         catch(JwtException e) {
+            log.error("Invalid JWT token: {}", e.getMessage());
             return null;
         }
     }
