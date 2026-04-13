@@ -6,6 +6,7 @@ import { PlacePin, PlaceService, CreatePlaceRequest, NavigationResponse } from '
 import { UserStateService } from '../core/user-state.service';
 import { CurrentUser } from '../core/auth.service';
 import { RouterModule } from '@angular/router';
+import { Subject, of, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-map',
@@ -18,6 +19,12 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
   private map!: L.Map;
   private markerLayer = L.layerGroup();
   private popupOpenHandler!: (e: L.PopupEvent) => void;
+  private markerMap: { [id: number]: L.Marker } = {};
+  private searchSubject = new Subject<string>();
+
+  searchQuery = '';
+  searchResults: PlacePin[] = [];
+  showSearchResults = false;
 
   addPlaceMode = false;
   showPlaceForm = false;
@@ -48,6 +55,20 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
       this.currentUser = user;
       this.userInitials = this.userState.getInitials(user);
       this.userDisplayName = this.userState.getDisplayName(user);
+    });
+
+    this.searchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(query => {
+        if (!query.trim()) {
+          return of([]);
+        }
+        return this.placeService.search(query);
+      })
+    ).subscribe(results => {
+      this.searchResults = results;
+      this.showSearchResults = results.length > 0;
     });
   }
 
@@ -119,6 +140,31 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
     this.removeTempMarker();
   }
 
+  onSearchInput(): void {
+    this.searchSubject.next(this.searchQuery);
+    if (!this.searchQuery.trim()) {
+      this.searchResults = [];
+      this.showSearchResults = false;
+    }
+  }
+
+  selectSearchResult(place: PlacePin): void {
+    this.searchQuery = place.name;
+    this.searchResults = [];
+    this.showSearchResults = false;
+
+    const marker = this.markerMap[place.id];
+    if (marker) {
+      marker.openPopup();
+    }
+  }
+
+  hideSearchResults(): void {
+    setTimeout(() => {
+      this.showSearchResults = false;
+    }, 200);
+  }
+
   private removeTempMarker(): void {
     if (this.tempMarker) {
       this.map.removeLayer(this.tempMarker);
@@ -179,14 +225,17 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
     this.placeService.getAll().subscribe({
       next: (pins: PlacePin[]) => {
         this.markerLayer.clearLayers();
+        this.markerMap = {};
         pins.forEach((pin) => {
-          L.marker([pin.latitude, pin.longitude], { icon: blueIcon })
+          const marker = L.marker([pin.latitude, pin.longitude], { icon: blueIcon })
             .bindPopup(this.buildPopupHtml(pin))
             .addTo(this.markerLayer);
+          this.markerMap[pin.id] = marker;
         });
       },
       error: () => {
         this.markerLayer.clearLayers();
+        this.markerMap = {};
       },
     });
   }
@@ -204,7 +253,7 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
       center: sggwCoords,
       zoom: 16,
       zoomControl: false,
-      dragging: false,
+      dragging: true,
       keyboard: false,
       scrollWheelZoom: false,
       doubleClickZoom: false,
