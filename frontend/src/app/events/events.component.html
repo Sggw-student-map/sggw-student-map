@@ -1,0 +1,106 @@
+<div class="page-wrapper">
+
+  <aside class="sidebar">
+    <button class="back-btn" routerLink="/map">&#8592; Wróć do Mapki</button>
+    <nav>
+      <a class="nav-item" routerLink="/feed"><span class="dot blue"></span>Feed</a>
+      <a class="nav-item active" routerLink="/events"><span class="dot green"></span>Wydarzenia</a>
+      <a class="nav-item" routerLink="/opinions"><span class="dot purple"></span>Opinie</a>
+      <a class="nav-item" routerLink="/friends"><span class="dot pink"></span>Znajomi</a>
+      <a class="nav-item" routerLink="/notifications"><span class="dot yellow"></span>Powiadomienia</a>
+      <a class="nav-item" routerLink="/profile"><span class="dot red"></span>Profil</a>
+      <a class="nav-item" routerLink="/settings"><span class="dot gray"></span>Ustawienia</a>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+
+    <p class="empty" *ngIf="events.length === 0">Brak wydarzeń.</p>
+
+    <div class="event-card" *ngFor="let event of events; trackBy: trackById">
+
+      <div class="event-image" *ngIf="event.imageUrl">
+        <img [src]="event.imageUrl" alt="zdjęcie wydarzenia" />
+      </div>
+
+      <div class="event-inner">
+
+        <div class="event-datetime">
+          {{ formatFullDate(event.dateOfEvent) }}, godz. {{ formatHour(event.dateOfEvent) }}
+          <span *ngIf="isToday(event.dateOfEvent)" class="badge badge-today">Dziś!</span>
+          <span *ngIf="isTomorrow(event.dateOfEvent)" class="badge badge-tomorrow">Jutro</span>
+        </div>
+
+        <div class="event-title">{{ event.nameOfEvent }}</div>
+
+        <div class="event-place">📍 {{ event.placeName }} &nbsp;·&nbsp; 👤 {{ event.organizerName }}</div>
+
+        <p class="event-description" *ngIf="event.comment">{{ event.comment }}</p>
+
+        <div class="event-interest-row">
+          <div class="interest-info">
+            <span class="interest-count">⭐ {{ event.interestedCount }} zainteresowanych</span>
+            <span class="event-participants">👥 {{ event.participantCount }} {{ event.participantCount === 1 ? 'osoba bierze udział' : event.participantCount < 5 ? 'osoby biorą udział' : 'osób bierze udział' }}</span>
+          </div>
+          <div class="event-actions">
+            <button class="action-btn"
+                    [class.active-interest]="event.interestedByMe"
+                    (click)="toggleInterested(event)">
+              {{ event.interestedByMe ? '★ Interesuję się' : '☆ Interesuję się' }}
+            </button>
+            <button class="action-btn action-btn--join"
+                    [class.active-join]="event.joinedByMe"
+                    (click)="toggleJoin(event)">
+              {{ event.joinedByMe ? '✓ Dołączyłem' : '+ Dołączę' }}
+            </button>
+          </div>
+        </div>
+
+
+        <div class="card-footer">
+          <button class="vote-btn" [class.liked]="event.userLiked" (click)="toggleLike(event)">
+            ♥ {{ event.likes }}
+          </button>
+          <button class="vote-btn">💬 {{ event.comments }}</button>
+          <input class="comment-input" placeholder="Skomentuj..."
+                 [(ngModel)]="event.newComment" (keyup.enter)="postComment(event)" />
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<button class="fab" (click)="showModal = true">+ Dodaj wydarzenie</button>
+
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <h3>Nowe wydarzenie</h3>
+    <div class="form-group">
+      <label>Nazwa</label>
+      <input [(ngModel)]="modalName" placeholder="Nazwa wydarzenia" />
+    </div>
+    <div class="form-group">
+      <label>Data i godzina</label>
+      <input type="datetime-local" [(ngModel)]="modalDate" />
+    </div>
+    <div class="form-group">
+      <label>Opis (opcjonalnie)</label>
+      <textarea [(ngModel)]="modalComment" placeholder="Opisz wydarzenie..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>Zdjęcie (opcjonalnie)</label>
+      <input type="file" accept="image/*" (change)="onImageSelected($event)" class="file-input" />
+      <div class="image-preview" *ngIf="selectedImagePreview">
+        <img [src]="selectedImagePreview" alt="podgląd" />
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" (click)="closeModal()">Anuluj</button>
+      <button class="btn-submit" [disabled]="!modalName.trim() || !modalDate || submitting" (click)="submitEvent()">
+        {{ submitting ? 'Tworzenie...' : 'Utwórz' }}
+      </button>
+    </div>
+  </div>
+</div>
