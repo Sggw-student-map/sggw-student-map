@@ -2,7 +2,9 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { switchMap } from 'rxjs/operators';
 import { AuthService } from '../core/auth.service';
+import { UserStateService } from '../core/user-state.service';
 
 @Component({
   selector: 'app-login',
@@ -17,7 +19,8 @@ export class Login {
 
   constructor(
     private readonly router: Router,
-    private readonly authService: AuthService
+    private readonly authService: AuthService,
+    private readonly userState: UserStateService
   ) {}
 
   onLogin(username: string, password: string): void {
@@ -29,16 +32,18 @@ export class Login {
     }
 
     this.isLoading = true;
-    this.authService.login({ username: username.trim(), password: password.trim() }).subscribe({
-      next: () => {
-        this.isLoading = false;
-        this.router.navigate(['/map']);
-      },
-      error: () => {
-        this.isLoading = false;
-        this.errorMessage = 'Niepoprawne dane logowania albo niedostępny backend.';
-      }
-    });
+    this.authService
+      .login({ username: username.trim(), password: password.trim() })
+      .pipe(switchMap(() => this.userState.loadUser()))
+      .subscribe({
+        next: () => {
+          this.isLoading = false;
+          this.router.navigate(['/map']);
+        },
+        error: () => {
+          this.isLoading = false;
+          this.errorMessage = 'Niepoprawne dane logowania albo niedostępny backend.';
+        },
+      });
   }
-
 }

@@ -1,0 +1,7 @@
+.cursor-crosshair {
+  cursor: crosshair !important;
+}
+
+.cursor-crosshair .leaflet-grab {
+  cursor: crosshair !important;
+}

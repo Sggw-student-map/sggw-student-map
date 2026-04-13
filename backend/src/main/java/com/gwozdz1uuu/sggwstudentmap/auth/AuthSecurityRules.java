@@ -17,13 +17,6 @@ public class AuthSecurityRules implements SecurityRules {
                 .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
                 .requestMatchers(HttpMethod.POST, "/auth/refresh").permitAll()
                 .requestMatchers(HttpMethod.GET, "/auth/me").authenticated()
-                .requestMatchers(HttpMethod.GET, "/api/pins", "/api/pins/**").permitAll()
-                //.requestMatchers("/api/friends/**").authenticated()
-                // .requestMatchers(HttpMethod.GET, "/api/friends", "/api/friends/**").permitAll()
-                // .requestMatchers(HttpMethod.POST "/api/friends", "/api/friends/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/places","/api/places/**").permitAll()
-                .requestMatchers(HttpMethod.OPTIONS, "/api/places","/api/places/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/places","/api/places/**").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/reviews", "/api/reviews/**").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/api/reviews", "/api/reviews/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/users").permitAll();
