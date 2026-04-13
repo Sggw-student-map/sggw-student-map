@@ -38,6 +38,10 @@ export class PlaceService {
     return this.http.get<PlacePin[]>(this.url);
   }
 
+  search(query: string): Observable<PlacePin[]> {
+    return this.http.get<PlacePin[]>(`${this.url}/search`, { params: { q: query } });
+  }
+
   getById(id: number): Observable<PlacePin> {
     return this.http.get<PlacePin>(`${this.url}/${id}`);
   }

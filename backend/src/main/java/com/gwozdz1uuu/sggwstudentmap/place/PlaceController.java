@@ -20,6 +20,11 @@ public class PlaceController {
         return ResponseEntity.ok(placeService.getAllPlaces());
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<List<Place>> searchPlaces(@RequestParam("q") String query) {
+        return ResponseEntity.ok(placeService.searchPlaces(query));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Place> getPlaceById(@PathVariable Integer id) {
         return placeService.getPlaceById(id)

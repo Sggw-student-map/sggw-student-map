@@ -18,6 +18,10 @@ public class PlaceService {
         return placeRepository.findAll();
     }
 
+    public List<Place> searchPlaces(String query) {
+        return placeRepository.findByNameContainingIgnoreCase(query);
+    }
+
     public Optional<Place> getPlaceById(Integer id) {
         return placeRepository.findById(id);
     }
