@@ -5,6 +5,8 @@ import { Register } from './register/register';
 import { OpinionsPageComponent } from './reviews/opinions-page.component';
 import { FriendsComponent } from './friends/friends.component';
 import { ProfileComponent } from './profile/profile.component';
+import { FeedComponent } from './feed/feed.component';
+import { EventsComponent } from './events/events.component';
 
 export const routes: Routes = [
     { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -14,5 +16,7 @@ export const routes: Routes = [
     { path: 'opinions', component: OpinionsPageComponent },
     { path: 'friends', component: FriendsComponent },
     { path: 'profile', component: ProfileComponent },
+    { path: 'feed', component: FeedComponent },
+    { path: 'events', component: EventsComponent },
     { path: '**', redirectTo: 'login' }
 ];
