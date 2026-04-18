@@ -6,7 +6,7 @@ import { environment } from '../../environments/environment';
 export interface PostResponse {
   id: number;
   content: string;
-  // imageUrl?: string;
+  // imageUrl?: string; // ← odkomentuj gdy chmura gotowa
   createdAt: string;
   placeId: number;
   placeName: string;
@@ -16,6 +16,7 @@ export interface PostResponse {
   likesCount: number;
   likedByMe: boolean;
   commentsCount: number;
+  isMyPost: boolean;
 }
 
 export interface PostCommentResponse {
@@ -25,6 +26,8 @@ export interface PostCommentResponse {
   authorId: number;
   authorFirstName: string;
   authorLastName: string;
+  isMyComment: boolean;
+  showMenu?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -55,5 +58,13 @@ export class PostService {
 
   addComment(postId: number, content: string): Observable<PostCommentResponse> {
     return this.http.post<PostCommentResponse>(`${this.base}/${postId}/comments`, { content });
+  }
+
+  deletePost(postId: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/${postId}`);
+  }
+
+  deleteComment(postId: number, commentId: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/${postId}/comments/${commentId}`);
   }
 }

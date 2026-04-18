@@ -1,10 +1,6 @@
 package com.gwozdz1uuu.sggwstudentmap.post;
 
-record CreatePostRequest(
-    Integer idPlace,
-    String content
-    // String imageUrl // ← odkomentuj gdy chmura gotowa
-) {}
+record CreatePostRequest(Integer idPlace, String content) {}
 
 record PostResponse(
     Integer id,
@@ -18,7 +14,8 @@ record PostResponse(
     String authorLastName,
     int likesCount,
     boolean likedByMe,
-    int commentsCount
+    int commentsCount,
+    boolean isMyPost
 ) {}
 
 record PostCommentRequest(String content) {}
@@ -29,5 +26,6 @@ record PostCommentResponse(
     String createdAt,
     Integer authorId,
     String authorFirstName,
-    String authorLastName
+    String authorLastName,
+    boolean isMyComment
 ) {}

@@ -40,7 +40,7 @@ public class PostController {
 
     @GetMapping("/{postId}/comments")
     public ResponseEntity<List<PostCommentResponse>> getComments(@PathVariable Integer postId) {
-        return ResponseEntity.ok(postService.getComments(postId));
+        return ResponseEntity.ok(postService.getComments(authService.getCurrentUser().getId(), postId));
     }
 
     @PostMapping("/{postId}/comments")
@@ -49,5 +49,18 @@ public class PostController {
             @RequestBody PostCommentRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(postService.addComment(authService.getCurrentUser().getId(), postId, request.content()));
+    }
+
+    @DeleteMapping("/{postId}")
+    public ResponseEntity<Void> deletePost(@PathVariable Integer postId) {
+        postService.deletePost(authService.getCurrentUser().getId(), postId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{postId}/comments/{commentId}")
+    public ResponseEntity<Void> deleteComment(@PathVariable Integer postId,
+                                               @PathVariable Integer commentId) {
+        postService.deleteComment(authService.getCurrentUser().getId(), commentId);
+        return ResponseEntity.noContent().build();
     }
 }

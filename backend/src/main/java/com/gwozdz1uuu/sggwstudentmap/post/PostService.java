@@ -33,7 +33,6 @@ public class PostService {
         post.setIdPlace(request.idPlace());
         post.setIdUser(currentUserId);
         post.setContent(request.content());
-        // post.setImageUrl(request.imageUrl()); // ← odkomentuj gdy chmura gotowa
         post.setCreatedAt(LocalDateTime.now());
         return toResponse(postRepository.save(post), currentUserId);
     }
@@ -54,9 +53,9 @@ public class PostService {
         postLikeRepository.deleteByIdPostAndIdUser(postId, currentUserId);
     }
 
-    public List<PostCommentResponse> getComments(Integer postId) {
+    public List<PostCommentResponse> getComments(Integer currentUserId, Integer postId) {
         return postCommentRepository.findByIdPostOrderByCreatedAt(postId).stream()
-                .map(c -> toCommentResponse(c))
+                .map(c -> toCommentResponse(c, currentUserId))
                 .toList();
     }
 
@@ -68,7 +67,26 @@ public class PostService {
         comment.setIdUser(currentUserId);
         comment.setContent(content);
         comment.setCreatedAt(LocalDateTime.now());
-        return toCommentResponse(postCommentRepository.save(comment));
+        return toCommentResponse(postCommentRepository.save(comment), currentUserId);
+    }
+
+    @Transactional
+    public void deletePost(Integer currentUserId, Integer postId) {
+        var post = postRepository.findById(postId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
+        if (!post.getIdUser().equals(currentUserId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not your post");
+        }
+        postRepository.delete(post);
+    }
+
+    public void deleteComment(Integer currentUserId, Integer commentId) {
+        var comment = postCommentRepository.findById(commentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment not found"));
+        if (!comment.getIdUser().equals(currentUserId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not your comment");
+        }
+        postCommentRepository.delete(comment);
     }
 
     private PostResponse toResponse(Post p, Integer currentUserId) {
@@ -86,18 +104,20 @@ public class PostService {
                 user != null ? user.getLastName() : "",
                 (int) postLikeRepository.countByIdPost(p.getId()),
                 postLikeRepository.existsByIdPostAndIdUser(p.getId(), currentUserId),
-                (int) postCommentRepository.countByIdPost(p.getId())
+                (int) postCommentRepository.countByIdPost(p.getId()),
+                p.getIdUser().equals(currentUserId)
         );
     }
 
-    private PostCommentResponse toCommentResponse(PostComment c) {
+    private PostCommentResponse toCommentResponse(PostComment c, Integer currentUserId) {
         var user = userRepository.findById(c.getIdUser()).orElse(null);
         return new PostCommentResponse(
                 c.getId(), c.getContent(),
                 c.getCreatedAt().toString(),
                 c.getIdUser(),
                 user != null ? user.getFirstName() : "",
-                user != null ? user.getLastName() : ""
+                user != null ? user.getLastName() : "",
+                c.getIdUser().equals(currentUserId)
         );
     }
 }

@@ -25,6 +25,12 @@
           <span class="time">{{ post.timeAgo }}</span>
           <div><span class="place-chip">📍 {{ post.placeName }}</span></div>
         </div>
+        <div *ngIf="post.isMyPost" style="position:relative; flex-shrink:0; margin-left:auto;">
+          <button class="menu-btn" (click)="post.showMenu = !post.showMenu">⋯</button>
+          <div class="menu-dropdown" *ngIf="post.showMenu">
+            <button (click)="deletePost(post); post.showMenu = false">🗑 Usuń post</button>
+          </div>
+        </div>
       </div>
 
       <div class="card-body">
@@ -45,7 +51,13 @@
 
       <div class="comments-section" *ngIf="post.showComments">
         <div class="comment" *ngFor="let c of post.commentsList">
-          <strong>{{ c.authorFirstName }} {{ c.authorLastName }}</strong>: {{ c.content }}
+          <span><strong>{{ c.authorFirstName }} {{ c.authorLastName }}</strong>: {{ c.content }}</span>
+          <div *ngIf="c.isMyComment" class="comment-menu">
+            <button class="menu-btn" (click)="c.showMenu = !c.showMenu">⋯</button>
+            <div class="menu-dropdown" *ngIf="c.showMenu">
+              <button (click)="deleteComment(post, c); c.showMenu = false">🗑 Usuń komentarz</button>
+            </div>
+          </div>
         </div>
         <div class="comment-input-row">
           <input class="comment-input" placeholder="Skomentuj..."

@@ -23,6 +23,8 @@ export interface PostVM {
   newComment: string;
   showComments: boolean;
   commentsList: PostCommentResponse[];
+  isMyPost: boolean;
+  showMenu: boolean;
 }
 
 const AVATAR_COLORS = [
@@ -83,7 +85,9 @@ export class FeedComponent implements OnInit {
       comments: p.commentsCount,
       newComment: '',
       showComments: false,
-      commentsList: []
+      commentsList: [],
+      isMyPost: p.isMyPost,
+      showMenu: false
     };
   }
 
@@ -120,6 +124,23 @@ export class FeedComponent implements OnInit {
         post.newComment = '';
       },
       error: (err) => console.error(err)
+    });
+  }
+
+  deletePost(post: PostVM): void {
+    this.postService.deletePost(post.id).subscribe({
+      next: () => { this.posts = this.posts.filter(p => p.id !== post.id); },
+      error: (err) => console.error('Błąd usuwania posta:', err)
+    });
+  }
+
+  deleteComment(post: PostVM, comment: PostCommentResponse): void {
+    this.postService.deleteComment(post.id, comment.id).subscribe({
+      next: () => {
+        post.commentsList = post.commentsList.filter(c => c.id !== comment.id);
+        post.comments--;
+      },
+      error: (err) => console.error('Błąd usuwania komentarza:', err)
     });
   }
 

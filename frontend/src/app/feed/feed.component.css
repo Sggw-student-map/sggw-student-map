@@ -218,11 +218,7 @@
   padding: 8px 0 4px;
   border-top: 1px solid #f3f4f6;
 }
-.comment {
-  font-size: 13px;
-  color: #374151;
-  padding: 4px 0;
-}
+
 .comment-input-row {
   display: flex;
   gap: 8px;
@@ -254,3 +250,76 @@
   outline: none;
 }
 .form-group select:focus { border-color: #378ADD; }
+
+.comment {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #374151;
+  padding: 4px 0;
+}
+
+.comment-menu {
+  position: relative;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+
+.menu-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 6px;
+  color: #666;
+}
+
+.menu-dropdown {
+  position: absolute;
+  right: 16px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  z-index: 10;
+}
+
+.menu-dropdown button {
+  display: block;
+  width: 100%;
+  padding: 10px 24px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  color: #e53935;
+  font-size: 14px;
+}
+
+.menu-dropdown button:hover {
+  background: #ffeaea;
+  border-radius: 8px;
+}
+
+.comment-menu {
+  position: relative;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.comment-menu .menu-dropdown {
+  position: absolute;
+  right: 0;
+  top: 28px;
+}
+
+.post-card {
+  position: relative;
+}
+
+.comments-section {
+  padding: 8px 0 4px;
+  border-top: 1px solid #f3f4f6;
+}
