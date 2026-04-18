@@ -1,5 +1,4 @@
 <div class="page-wrapper">
-
   <aside class="sidebar">
     <button class="back-btn" routerLink="/map">&#8592; Wróć do Mapki</button>
     <nav>
@@ -14,11 +13,9 @@
   </aside>
 
   <main class="main-content">
-
     <p class="empty" *ngIf="posts.length === 0">Brak postów. Bądź pierwszy!</p>
 
     <div class="post-card" *ngFor="let post of posts; trackBy: trackById">
-
       <div class="card-header">
         <div class="avatar" [style.background]="post.avatarBg" [style.color]="post.avatarColor">
           {{ post.initials }}
@@ -32,41 +29,63 @@
 
       <div class="card-body">
         <p class="post-text">{{ post.content }}</p>
-        <div class="post-image" *ngIf="post.imageUrl">
+        <!-- <div class="post-image" *ngIf="post.imageUrl">
           <img [src]="post.imageUrl" alt="zdjęcie posta" />
-        </div>
+        </div> -->
       </div>
 
       <div class="card-footer">
         <button class="vote-btn" [class.liked]="post.userLiked" (click)="toggleLike(post)">
           ♥ {{ post.likes }}
         </button>
-        <button class="vote-btn">💬 {{ post.comments }}</button>
-        <input class="comment-input" placeholder="Skomentuj..."
-               [(ngModel)]="post.newComment" (keyup.enter)="postComment(post)" />
+        <button class="vote-btn" (click)="toggleComments(post)">
+          💬 {{ post.comments }}
+        </button>
       </div>
 
+      <div class="comments-section" *ngIf="post.showComments">
+        <div class="comment" *ngFor="let c of post.commentsList">
+          <strong>{{ c.authorFirstName }} {{ c.authorLastName }}</strong>: {{ c.content }}
+        </div>
+        <div class="comment-input-row">
+          <input class="comment-input" placeholder="Skomentuj..."
+                 [(ngModel)]="post.newComment"
+                 (keyup.enter)="postComment(post)" />
+          <button class="btn-send" (click)="postComment(post)">Wyślij</button>
+        </div>
+      </div>
     </div>
-
   </main>
 </div>
 
-<button class="fab" (click)="showModal = true" title="Nowy post">+ Dodaj post</button>
+<button class="fab" (click)="showModal = true">+ Dodaj post</button>
 
 <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
   <div class="modal" (click)="$event.stopPropagation()">
     <h3>Nowy post</h3>
-    <textarea [(ngModel)]="newPostContent" placeholder="Co się dzieje w okolicy?..." rows="4"></textarea>
+    <div class="form-group">
+      <label class="form-label">Miejsce</label>
+      <select [(ngModel)]="selectedPlaceId" required>
+        <option [ngValue]="null" disabled>Wybierz miejsce</option>
+        <option *ngFor="let p of places" [ngValue]="p.id">{{ p.name }}</option>
+      </select>
+    </div>
     <div class="form-group" style="margin-top: 12px;">
+      <label class="form-label">Treść</label>
+      <textarea [(ngModel)]="newPostContent" placeholder="Co się dzieje w okolicy?..." rows="4"></textarea>
+    </div>
+    <!-- <div class="form-group" style="margin-top: 12px;">
       <label class="form-label">Zdjęcie (opcjonalnie)</label>
       <input type="file" accept="image/*" (change)="onImageSelected($event)" class="file-input" />
       <div class="image-preview" *ngIf="selectedImagePreview">
         <img [src]="selectedImagePreview" alt="podgląd" />
       </div>
-    </div>
+    </div> -->
     <div class="modal-actions">
       <button class="btn-cancel" (click)="closeModal()">Anuluj</button>
-      <button class="btn-submit" [disabled]="!newPostContent.trim() || submitting" (click)="submitPost()">
+      <button class="btn-submit"
+              [disabled]="!newPostContent.trim() || !selectedPlaceId || submitting"
+              (click)="submitPost()">
         {{ submitting ? 'Wysyłanie...' : 'Opublikuj' }}
       </button>
     </div>

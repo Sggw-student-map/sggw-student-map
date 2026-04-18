@@ -213,3 +213,44 @@
   max-height: 160px;
 }
 .image-preview img { width: 100%; object-fit: cover; border-radius: 10px; }
+
+.comments-section {
+  padding: 8px 0 4px;
+  border-top: 1px solid #f3f4f6;
+}
+.comment {
+  font-size: 13px;
+  color: #374151;
+  padding: 4px 0;
+}
+.comment-input-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.btn-send {
+  padding: 6px 14px;
+  background: #378ADD;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.btn-send:hover { background: #185FA5; }
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.form-group select {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  background: #f9fafb;
+  color: #111827;
+  outline: none;
+}
+.form-group select:focus { border-color: #378ADD; }
