@@ -3,6 +3,11 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
+export interface PlaceOption {
+  id: number;
+  name: string;
+}
+
 export interface EventResponse {
   id: number;
   nameOfEvent: string;
@@ -10,8 +15,8 @@ export interface EventResponse {
   comment?: string;
   placeId: number;
   placeName: string;
+  // placeImageUrl?: string; // ← odkomentuj gdy places będą miały image_url
   organizerId: number;
-  organizerUsername: string;
   organizerFirstName: string;
   organizerLastName: string;
   participantCount: number;
@@ -29,6 +34,7 @@ export interface CreateEventRequest {
 @Injectable({ providedIn: 'root' })
 export class EventService {
   private base = `${environment.apiBaseUrl}/events`;
+  private placesBase = `${environment.apiBaseUrl}/places`;
 
   constructor(private http: HttpClient) {}
 
@@ -48,7 +54,7 @@ export class EventService {
     return this.http.delete<void>(`${this.base}/${eventId}/join`);
   }
 
-  deleteEvent(eventId: number): Observable<void> {
-    return this.http.delete<void>(`${this.base}/${eventId}`);
+  getPlaces(): Observable<PlaceOption[]> {
+    return this.http.get<PlaceOption[]>(this.placesBase);
   }
 }
