@@ -43,6 +43,8 @@ export interface CommentResponse {
   authorId: number;
   authorFirstName: string;
   authorLastName: string;
+  isMyComment: boolean;
+  showMenu?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -94,5 +96,13 @@ export class EventService {
 
   getPlaces(): Observable<PlaceOption[]> {
     return this.http.get<PlaceOption[]>(this.placesBase);
+  }
+
+  deleteEvent(eventId: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/${eventId}`);
+  }
+
+  deleteComment(eventId: number, commentId: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/${eventId}/comments/${commentId}`);
   }
 }

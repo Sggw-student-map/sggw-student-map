@@ -2,12 +2,7 @@ package com.gwozdz1uuu.sggwstudentmap.event;
 
 import java.time.LocalDateTime;
 
-record CreateEventRequest(
-        String nameOfEvent,
-        Integer idPlace,
-        LocalDateTime dateOfEvent,
-        String comment
-) {}
+record CreateEventRequest(String nameOfEvent, Integer idPlace, LocalDateTime dateOfEvent, String comment) {}
 
 record EventResponse(
         Integer id,
@@ -20,14 +15,14 @@ record EventResponse(
         Integer organizerId,
         String organizerFirstName,
         String organizerLastName,
-        Integer participantCount,
+        long participantCount,
         boolean joinedByMe,
         boolean organizedByMe,
-        int likesCount,
+        long likesCount,
         boolean likedByMe,
-        int interestedCount,
+        long interestedCount,
         boolean interestedByMe,
-        int commentsCount
+        long commentsCount
 ) {}
 
 record CommentRequest(String content) {}
@@ -38,5 +33,6 @@ record CommentResponse(
         String createdAt,
         Integer authorId,
         String authorFirstName,
-        String authorLastName
+        String authorLastName,
+        boolean isMyComment
 ) {}

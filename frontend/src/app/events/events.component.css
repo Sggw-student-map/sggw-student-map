@@ -386,6 +386,17 @@
 }
 .vote-btn:hover { background: #f9fafb; }
 .vote-btn.liked { background: #FBEAF0; border-color: #ED93B1; color: #72243E; }
+
+.comment {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #374151;
+  padding: 4px 0;
+}
+
+
 .comment-input {
   flex: 1; border: 1px solid #e5e7eb; border-radius: 10px;
   padding: 7px 14px; font-size: 13px; background: #f9fafb;
@@ -402,3 +413,15 @@
   max-height: 160px;
 }
 .image-preview img { width: 100%; object-fit: cover; border-radius: 10px; }
+
+.comment-menu {
+  position: relative;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.comment-menu .menu-dropdown {
+  position: absolute;
+  right: 0;
+  top: 28px;
+}

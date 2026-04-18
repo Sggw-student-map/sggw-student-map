@@ -23,7 +23,7 @@ export interface EventVM {
   comments: CommentResponse[];
   newComment: string;
   organizedByMe: boolean;
-  //showMenu: boolean;
+  showMenu: boolean;
 }
 
 @Component({
@@ -84,7 +84,7 @@ export class EventsComponent implements OnInit {
       comments: [],
       newComment: '',
       organizedByMe: e.organizedByMe,
-      //showMenu: false
+      showMenu: false
     };
   }
 
@@ -187,6 +187,23 @@ export class EventsComponent implements OnInit {
   isTomorrow(dateStr: string): boolean {
     const t = new Date(); t.setDate(t.getDate() + 1);
     return new Date(dateStr).toDateString() === t.toDateString();
+  }
+
+  deleteEvent(event: EventVM): void {
+    this.eventService.deleteEvent(event.id).subscribe({
+      next: () => { this.events = this.events.filter(e => e.id !== event.id); },
+      error: (err) => console.error('Błąd usuwania:', err)
+    });
+  }
+
+  deleteComment(event: EventVM, comment: CommentResponse): void {
+    this.eventService.deleteComment(event.id, comment.id).subscribe({
+      next: () => {
+        event.comments = event.comments.filter(c => c.id !== comment.id);
+        event.commentsCount--;
+      },
+      error: (err) => console.error('Błąd usuwania komentarza:', err)
+    });
   }
 
   formatDay(dateStr: string): string { return new Date(dateStr).getDate().toString(); }

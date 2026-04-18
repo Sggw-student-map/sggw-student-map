@@ -18,14 +18,13 @@ public class EventController {
 
     @GetMapping
     public ResponseEntity<List<EventResponse>> getAllEvents() {
-        Integer userId = authService.getCurrentUser().getId();
-        return ResponseEntity.ok(eventService.getAllEvents(userId));
+        return ResponseEntity.ok(eventService.getAllEvents(authService.getCurrentUser().getId()));
     }
 
     @PostMapping
     public ResponseEntity<EventResponse> createEvent(@RequestBody CreateEventRequest request) {
-        Integer userId = authService.getCurrentUser().getId();
-        return ResponseEntity.status(HttpStatus.CREATED).body(eventService.createEvent(userId, request));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(eventService.createEvent(authService.getCurrentUser().getId(), request));
     }
 
     @PostMapping("/{eventId}/join")
@@ -66,14 +65,26 @@ public class EventController {
 
     @GetMapping("/{eventId}/comments")
     public ResponseEntity<List<CommentResponse>> getComments(@PathVariable Integer eventId) {
-        return ResponseEntity.ok(eventService.getComments(eventId));
+        return ResponseEntity.ok(eventService.getComments(authService.getCurrentUser().getId(), eventId));
     }
 
     @PostMapping("/{eventId}/comments")
     public ResponseEntity<CommentResponse> addComment(@PathVariable Integer eventId,
                                                        @RequestBody CommentRequest request) {
-        Integer userId = authService.getCurrentUser().getId();
-        return ResponseEntity.status(HttpStatus.CREATED).body(eventService.addComment(userId, eventId, request));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(eventService.addComment(authService.getCurrentUser().getId(), eventId, request));
     }
 
+    @DeleteMapping("/{eventId}")
+    public ResponseEntity<Void> deleteEvent(@PathVariable Integer eventId) {
+        eventService.deleteEvent(authService.getCurrentUser().getId(), eventId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{eventId}/comments/{commentId}")
+    public ResponseEntity<Void> deleteComment(@PathVariable Integer eventId,
+                                               @PathVariable Integer commentId) {
+        eventService.deleteComment(authService.getCurrentUser().getId(), commentId);
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -7,9 +7,9 @@ import com.gwozdz1uuu.sggwstudentmap.user.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @AllArgsConstructor
@@ -97,27 +97,28 @@ public class EventService {
         comment.setIdUser(currentUserId);
         comment.setContent(request.content());
         EventComment saved = eventCommentRepository.save(comment);
-        return toCommentResponse(saved, author);
+        return toCommentResponse(saved, author, currentUserId);
     }
 
-    public List<CommentResponse> getComments(Integer eventId) {
+    public List<CommentResponse> getComments(Integer currentUserId, Integer eventId) {
         return eventCommentRepository.findByIdEventOrderByCreatedAtAsc(eventId)
                 .stream()
                 .map(c -> {
                     User author = userRepository.findById(c.getIdUser()).orElse(null);
-                    return toCommentResponse(c, author);
+                    return toCommentResponse(c, author, currentUserId);
                 })
                 .toList();
     }
 
-    private CommentResponse toCommentResponse(EventComment c, User author) {
+    private CommentResponse toCommentResponse(EventComment c, User author, Integer currentUserId) {
         return new CommentResponse(
                 c.getId(),
                 c.getContent(),
                 c.getCreatedAt() != null ? c.getCreatedAt().toString() : null,
                 author != null ? author.getId() : null,
                 author != null ? author.getFirstName() : null,
-                author != null ? author.getLastName() : null
+                author != null ? author.getLastName() : null,
+                c.getIdUser().equals(currentUserId)
         );
     }
 
@@ -127,7 +128,6 @@ public class EventService {
         User organizer = e.getOrganizerId() != null
                 ? userRepository.findById(e.getOrganizerId()).orElse(null)
                 : null;
-
         return new EventResponse(
                 e.getId(),
                 e.getNameOfEvent(),
@@ -148,5 +148,24 @@ public class EventService {
                 eventInterestedRepository.findByIdEventAndIdUser(e.getId(), currentUserId).isPresent(),
                 eventCommentRepository.countByIdEvent(e.getId())
         );
+    }
+
+    @Transactional
+    public void deleteEvent(Integer currentUserId, Integer eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
+        if (event.getOrganizerId() == null || !event.getOrganizerId().equals(currentUserId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not your event");
+        }
+        eventRepository.delete(event);
+    }
+
+    public void deleteComment(Integer currentUserId, Integer commentId) {
+        EventComment comment = eventCommentRepository.findById(commentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment not found"));
+        if (!comment.getIdUser().equals(currentUserId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not your comment");
+        }
+        eventCommentRepository.delete(comment);
     }
 }
