@@ -22,6 +22,11 @@ export interface EventResponse {
   participantCount: number;
   joinedByMe: boolean;
   organizedByMe: boolean;
+  likesCount: number;
+  likedByMe: boolean;
+  interestedCount: number;
+  interestedByMe: boolean;
+  commentsCount: number;
 }
 
 export interface CreateEventRequest {
@@ -29,6 +34,15 @@ export interface CreateEventRequest {
   idPlace: number;
   dateOfEvent: string;
   comment?: string;
+}
+
+export interface CommentResponse {
+  id: number;
+  content: string;
+  createdAt: string;
+  authorId: number;
+  authorFirstName: string;
+  authorLastName: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -52,6 +66,30 @@ export class EventService {
 
   leaveEvent(eventId: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/${eventId}/join`);
+  }
+
+  likeEvent(eventId: number): Observable<void> {
+    return this.http.post<void>(`${this.base}/${eventId}/like`, {});
+  }
+
+  unlikeEvent(eventId: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/${eventId}/like`);
+  }
+
+  markInterested(eventId: number): Observable<void> {
+    return this.http.post<void>(`${this.base}/${eventId}/interested`, {});
+  }
+
+  unmarkInterested(eventId: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/${eventId}/interested`);
+  }
+
+  getComments(eventId: number): Observable<CommentResponse[]> {
+    return this.http.get<CommentResponse[]>(`${this.base}/${eventId}/comments`);
+  }
+
+  addComment(eventId: number, content: string): Observable<CommentResponse> {
+    return this.http.post<CommentResponse>(`${this.base}/${eventId}/comments`, { content });
   }
 
   getPlaces(): Observable<PlaceOption[]> {

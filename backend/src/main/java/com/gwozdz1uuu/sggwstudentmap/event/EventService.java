@@ -8,8 +8,8 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
 import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @AllArgsConstructor
@@ -17,6 +17,9 @@ public class EventService {
 
     private final EventRepository eventRepository;
     private final UserOnEventRepository userOnEventRepository;
+    private final EventLikeRepository eventLikeRepository;
+    private final EventInterestedRepository eventInterestedRepository;
+    private final EventCommentRepository eventCommentRepository;
     private final UserRepository userRepository;
     private final PlaceRepository placeRepository;
 
@@ -30,14 +33,12 @@ public class EventService {
     public EventResponse createEvent(Integer currentUserId, CreateEventRequest request) {
         placeRepository.findById(request.idPlace())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Place not found"));
-
         Event event = new Event();
         event.setNameOfEvent(request.nameOfEvent());
         event.setIdPlace(request.idPlace());
         event.setDateOfEvent(request.dateOfEvent());
         event.setComment(request.comment());
         event.setOrganizerId(currentUserId);
-
         return toResponse(eventRepository.save(event), currentUserId);
     }
 
@@ -56,16 +57,76 @@ public class EventService {
         userOnEventRepository.delete(uoe);
     }
 
+    public void likeEvent(Integer currentUserId, Integer eventId) {
+        eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
+        eventLikeRepository.findByIdEventAndIdUser(eventId, currentUserId).ifPresent(l -> {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Already liked");
+        });
+        eventLikeRepository.save(new EventLike(eventId, currentUserId));
+    }
+
+    public void unlikeEvent(Integer currentUserId, Integer eventId) {
+        EventLike like = eventLikeRepository.findByIdEventAndIdUser(eventId, currentUserId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Like not found"));
+        eventLikeRepository.delete(like);
+    }
+
+    public void markInterested(Integer currentUserId, Integer eventId) {
+        eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
+        eventInterestedRepository.findByIdEventAndIdUser(eventId, currentUserId).ifPresent(i -> {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Already interested");
+        });
+        eventInterestedRepository.save(new EventInterested(eventId, currentUserId));
+    }
+
+    public void unmarkInterested(Integer currentUserId, Integer eventId) {
+        EventInterested interested = eventInterestedRepository.findByIdEventAndIdUser(eventId, currentUserId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Not interested"));
+        eventInterestedRepository.delete(interested);
+    }
+
+    public CommentResponse addComment(Integer currentUserId, Integer eventId, CommentRequest request) {
+        eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
+        User author = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        EventComment comment = new EventComment();
+        comment.setIdEvent(eventId);
+        comment.setIdUser(currentUserId);
+        comment.setContent(request.content());
+        EventComment saved = eventCommentRepository.save(comment);
+        return toCommentResponse(saved, author);
+    }
+
+    public List<CommentResponse> getComments(Integer eventId) {
+        return eventCommentRepository.findByIdEventOrderByCreatedAtAsc(eventId)
+                .stream()
+                .map(c -> {
+                    User author = userRepository.findById(c.getIdUser()).orElse(null);
+                    return toCommentResponse(c, author);
+                })
+                .toList();
+    }
+
+    private CommentResponse toCommentResponse(EventComment c, User author) {
+        return new CommentResponse(
+                c.getId(),
+                c.getContent(),
+                c.getCreatedAt() != null ? c.getCreatedAt().toString() : null,
+                author != null ? author.getId() : null,
+                author != null ? author.getFirstName() : null,
+                author != null ? author.getLastName() : null
+        );
+    }
+
     private EventResponse toResponse(Event e, Integer currentUserId) {
         Place place = placeRepository.findById(e.getIdPlace())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Place not found"));
         User organizer = e.getOrganizerId() != null
                 ? userRepository.findById(e.getOrganizerId()).orElse(null)
                 : null;
-
-        int participantCount = userOnEventRepository.countByIdEventu(e.getId());
-        boolean joinedByMe = userOnEventRepository.findByIdEventuAndIdUsers(e.getId(), currentUserId).isPresent();
-        boolean organizedByMe = e.getOrganizerId() != null && e.getOrganizerId().equals(currentUserId);
 
         return new EventResponse(
                 e.getId(),
@@ -78,9 +139,14 @@ public class EventService {
                 organizer != null ? organizer.getId() : null,
                 organizer != null ? organizer.getFirstName() : null,
                 organizer != null ? organizer.getLastName() : null,
-                participantCount,
-                joinedByMe,
-                organizedByMe
+                userOnEventRepository.countByIdEventu(e.getId()),
+                userOnEventRepository.findByIdEventuAndIdUsers(e.getId(), currentUserId).isPresent(),
+                e.getOrganizerId() != null && e.getOrganizerId().equals(currentUserId),
+                eventLikeRepository.countByIdEvent(e.getId()),
+                eventLikeRepository.findByIdEventAndIdUser(e.getId(), currentUserId).isPresent(),
+                eventInterestedRepository.countByIdEvent(e.getId()),
+                eventInterestedRepository.findByIdEventAndIdUser(e.getId(), currentUserId).isPresent(),
+                eventCommentRepository.countByIdEvent(e.getId())
         );
     }
 }

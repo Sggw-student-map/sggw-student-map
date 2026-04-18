@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { EventService, EventResponse, PlaceOption } from '../core/event.service';
+import { EventService, EventResponse, PlaceOption, CommentResponse } from '../core/event.service';
 
 export interface EventVM {
   id: number;
@@ -14,12 +14,16 @@ export interface EventVM {
   organizerName: string;
   participantCount: number;
   joinedByMe: boolean;
-  newComment: string;
-  likes: number;
-  userLiked: boolean;
-  comments: number;
+  likesCount: number;
+  likedByMe: boolean;
   interestedCount: number;
   interestedByMe: boolean;
+  commentsCount: number;
+  showComments: boolean;
+  comments: CommentResponse[];
+  newComment: string;
+  organizedByMe: boolean;
+  //showMenu: boolean;
 }
 
 @Component({
@@ -71,12 +75,16 @@ export class EventsComponent implements OnInit {
       organizerName: (e.organizerFirstName ?? '') + ' ' + (e.organizerLastName ?? ''),
       participantCount: e.participantCount,
       joinedByMe: e.joinedByMe,
+      likesCount: e.likesCount,
+      likedByMe: e.likedByMe,
+      interestedCount: e.interestedCount,
+      interestedByMe: e.interestedByMe,
+      commentsCount: e.commentsCount,
+      showComments: false,
+      comments: [],
       newComment: '',
-      likes: 0,
-      userLiked: false,
-      comments: 0,
-      interestedCount: 0,
-      interestedByMe: false
+      organizedByMe: e.organizedByMe,
+      //showMenu: false
     };
   }
 
@@ -97,36 +105,69 @@ export class EventsComponent implements OnInit {
   }
 
   toggleLike(event: EventVM): void {
-    event.userLiked = !event.userLiked;
-    event.likes += event.userLiked ? 1 : -1;
+    if (event.likedByMe) {
+      event.likedByMe = false;
+      event.likesCount--;
+      this.eventService.unlikeEvent(event.id).subscribe({
+        error: () => { event.likedByMe = true; event.likesCount++; }
+      });
+    } else {
+      event.likedByMe = true;
+      event.likesCount++;
+      this.eventService.likeEvent(event.id).subscribe({
+        error: () => { event.likedByMe = false; event.likesCount--; }
+      });
+    }
   }
 
   toggleInterested(event: EventVM): void {
-    event.interestedByMe = !event.interestedByMe;
-    event.interestedCount += event.interestedByMe ? 1 : -1;
+    if (event.interestedByMe) {
+      event.interestedByMe = false;
+      event.interestedCount--;
+      this.eventService.unmarkInterested(event.id).subscribe({
+        error: () => { event.interestedByMe = true; event.interestedCount++; }
+      });
+    } else {
+      event.interestedByMe = true;
+      event.interestedCount++;
+      this.eventService.markInterested(event.id).subscribe({
+        error: () => { event.interestedByMe = false; event.interestedCount--; }
+      });
+    }
+  }
+
+  toggleComments(event: EventVM): void {
+    event.showComments = !event.showComments;
+    if (event.showComments && event.comments.length === 0) {
+      this.eventService.getComments(event.id).subscribe({
+        next: (data) => { event.comments = data; },
+        error: (err) => console.error('Błąd pobierania komentarzy:', err)
+      });
+    }
   }
 
   postComment(event: EventVM): void {
     if (!event.newComment.trim()) return;
-    event.comments += 1;
-    event.newComment = '';
+    this.eventService.addComment(event.id, event.newComment).subscribe({
+      next: (c) => {
+        event.comments.push(c);
+        event.commentsCount++;
+        event.newComment = '';
+      },
+      error: (err) => console.error('Błąd dodawania komentarza:', err)
+    });
   }
 
   submitEvent(): void {
     if (!this.modalName.trim() || !this.modalDate || !this.modalPlaceId || this.submitting) return;
     this.submitting = true;
-
     this.eventService.createEvent({
       nameOfEvent: this.modalName,
       idPlace: this.modalPlaceId,
       dateOfEvent: this.modalDate,
       comment: this.modalComment || undefined
     }).subscribe({
-      next: (e) => {
-        this.events.unshift(this.mapToVM(e));
-        this.closeModal();
-        this.submitting = false;
-      },
+      next: (e) => { this.events.unshift(this.mapToVM(e)); this.closeModal(); this.submitting = false; },
       error: () => { this.submitting = false; }
     });
   }
@@ -148,25 +189,9 @@ export class EventsComponent implements OnInit {
     return new Date(dateStr).toDateString() === t.toDateString();
   }
 
-  formatDay(dateStr: string): string {
-    return new Date(dateStr).getDate().toString();
-  }
-
-  formatMonth(dateStr: string): string {
-    return new Date(dateStr).toLocaleDateString('pl-PL', { month: 'short' });
-  }
-
-  formatHour(dateStr: string): string {
-    return new Date(dateStr).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
-  }
-
-  formatFullDate(dateStr: string): string {
-    return new Date(dateStr).toLocaleDateString('pl-PL', {
-      day: 'numeric', month: 'long', year: 'numeric'
-    });
-  }
-
-  trackById(_: number, event: EventVM): number {
-    return event.id;
-  }
+  formatDay(dateStr: string): string { return new Date(dateStr).getDate().toString(); }
+  formatMonth(dateStr: string): string { return new Date(dateStr).toLocaleDateString('pl-PL', { month: 'short' }); }
+  formatHour(dateStr: string): string { return new Date(dateStr).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }); }
+  formatFullDate(dateStr: string): string { return new Date(dateStr).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' }); }
+  trackById(_: number, event: EventVM): number { return event.id; }
 }

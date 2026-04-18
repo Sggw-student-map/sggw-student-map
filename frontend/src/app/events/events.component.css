@@ -112,7 +112,6 @@
 }
 .fab:hover { background: #0F6E56; transform: scale(1.08); }
 
-/* MODAL */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -161,11 +160,11 @@
 .btn-submit:disabled { background: #9FE1CB; cursor: not-allowed; }
 .btn-submit:hover:not(:disabled) { background: #0F6E56; }
 
-/* EVENT CARD */
 .event-card {
   background: white;
   border-radius: 20px;
   border: 1px solid #e5e7eb;
+  position: relative;
 }
 .event-accent { height: 4px; width: 100%; }
 .accent-blue   { background: #60a5fa; }
@@ -180,6 +179,43 @@
 }
 
 .event-header { display: flex; align-items: flex-start; gap: 16px; }
+
+.menu-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 6px;
+  color: #666;
+}
+
+.menu-dropdown {
+  position: absolute;
+  right: 16px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  z-index: 10;
+}
+
+.menu-dropdown button {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  color: #e53935;
+  font-size: 14px;
+}
+
+.menu-dropdown button:hover {
+  background: #ffeaea;
+  border-radius: 8px;
+}
+
 .date-badge {
   flex-shrink: 0; width: 54px; height: 54px;
   border-radius: 14px; border: 1px solid #e5e7eb;
@@ -237,6 +273,25 @@
   color: #991b1b; padding: 10px 16px; border-radius: 10px; font-size: 13px;
 }
 
+.btn-send {
+  padding: 6px 14px;
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.btn-send:hover {
+  background: #388e3c;
+}
+
+.comment-input-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
 
 .event-image {
   width: 100%;

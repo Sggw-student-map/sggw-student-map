@@ -22,5 +22,21 @@ record EventResponse(
         String organizerLastName,
         Integer participantCount,
         boolean joinedByMe,
-        boolean organizedByMe
+        boolean organizedByMe,
+        int likesCount,
+        boolean likedByMe,
+        int interestedCount,
+        boolean interestedByMe,
+        int commentsCount
+) {}
+
+record CommentRequest(String content) {}
+
+record CommentResponse(
+        Integer id,
+        String content,
+        String createdAt,
+        Integer authorId,
+        String authorFirstName,
+        String authorLastName
 ) {}

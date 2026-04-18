@@ -58,13 +58,25 @@
 
 
         <div class="card-footer">
-          <button class="vote-btn" [class.liked]="event.userLiked" (click)="toggleLike(event)">
-            ♥ {{ event.likes }}
-          </button>
-          <button class="vote-btn">💬 {{ event.comments }}</button>
-          <input class="comment-input" placeholder="Skomentuj..."
-                 [(ngModel)]="event.newComment" (keyup.enter)="postComment(event)" />
-        </div>
+  <button class="vote-btn" [class.liked]="event.likedByMe" (click)="toggleLike(event)">
+    ♥ {{ event.likesCount }}
+  </button>
+  <button class="vote-btn" (click)="toggleComments(event)">
+    💬 {{ event.commentsCount }}
+  </button>
+</div>
+
+<div class="comments-section" *ngIf="event.showComments">
+  <div class="comment" *ngFor="let c of event.comments">
+    <strong>{{ c.authorFirstName }} {{ c.authorLastName }}</strong>: {{ c.content }}
+  </div>
+  <div class="comment-input-row">
+    <input class="comment-input" placeholder="Skomentuj..."
+           [(ngModel)]="event.newComment"
+           (keyup.enter)="postComment(event)" />
+    <button class="btn-send" (click)="postComment(event)">Wyślij</button>
+  </div>
+</div>
 
       </div>
     </div>
