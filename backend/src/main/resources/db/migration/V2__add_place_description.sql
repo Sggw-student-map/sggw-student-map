@@ -1,1 +1,0 @@
-ALTER TABLE places ADD COLUMN description VARCHAR(1000);
