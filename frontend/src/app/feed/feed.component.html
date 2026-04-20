@@ -15,7 +15,9 @@
 
   <main class="main-content">
 
-    <p class="empty" *ngIf="posts.length === 0">Brak postów. Bądź pierwszy!</p>
+    <p class="error-msg" *ngIf="errorMessage">{{ errorMessage }}</p>
+    <p class="empty" *ngIf="!loading && posts.length === 0 && !errorMessage">Brak postów. Bądź pierwszy!</p>
+    <p class="empty" *ngIf="loading">Ładowanie feedu...</p>
 
     <div class="post-card" *ngFor="let post of posts; trackBy: trackById">
 
@@ -28,6 +30,7 @@
           <span class="time">{{ post.timeAgo }}</span>
           <div><span class="place-chip">📍 {{ post.placeName }}</span></div>
         </div>
+        <button *ngIf="post.authoredByMe" class="delete-btn" title="Usuń post" (click)="deletePost(post)">✕</button>
       </div>
 
       <div class="card-body">
@@ -41,9 +44,34 @@
         <button class="vote-btn" [class.liked]="post.userLiked" (click)="toggleLike(post)">
           ♥ {{ post.likes }}
         </button>
-        <button class="vote-btn">💬 {{ post.comments }}</button>
+        <button class="vote-btn" (click)="toggleComments(post)">💬 {{ post.comments }}</button>
         <input class="comment-input" placeholder="Skomentuj..."
                [(ngModel)]="post.newComment" (keyup.enter)="postComment(post)" />
+      </div>
+
+      <div class="comments-section" *ngIf="post.commentsOpen">
+        <p class="comments-loading" *ngIf="post.commentsLoading">Ładowanie komentarzy...</p>
+        <p class="comments-empty" *ngIf="!post.commentsLoading && post.commentList.length === 0">
+          Brak komentarzy. Bądź pierwszy!
+        </p>
+        <div class="comment" *ngFor="let comment of post.commentList; trackBy: trackCommentById">
+          <div class="avatar avatar-sm"
+               [style.background]="comment.avatarBg"
+               [style.color]="comment.avatarColor">
+            {{ comment.initials }}
+          </div>
+          <div class="comment-body">
+            <div class="comment-header">
+              <span class="comment-author">{{ comment.authorName }}</span>
+              <span class="comment-time">{{ comment.timeAgo }}</span>
+              <button *ngIf="comment.authoredByMe || post.authoredByMe"
+                      class="comment-delete"
+                      title="Usuń komentarz"
+                      (click)="deleteComment(post, comment)">✕</button>
+            </div>
+            <p class="comment-text">{{ comment.content }}</p>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -57,13 +85,23 @@
   <div class="modal" (click)="$event.stopPropagation()">
     <h3>Nowy post</h3>
     <textarea [(ngModel)]="newPostContent" placeholder="Co się dzieje w okolicy?..." rows="4"></textarea>
-    <div class="form-group" style="margin-top: 12px;">
+
+    <div class="form-group">
+      <label class="form-label">Miejsce (opcjonalnie)</label>
+      <select [(ngModel)]="newPostPlaceId" class="place-select">
+        <option [ngValue]="null">— bez miejsca —</option>
+        <option *ngFor="let place of places" [ngValue]="place.id">{{ place.name }}</option>
+      </select>
+    </div>
+
+    <div class="form-group">
       <label class="form-label">Zdjęcie (opcjonalnie)</label>
       <input type="file" accept="image/*" (change)="onImageSelected($event)" class="file-input" />
       <div class="image-preview" *ngIf="selectedImagePreview">
         <img [src]="selectedImagePreview" alt="podgląd" />
       </div>
     </div>
+
     <div class="modal-actions">
       <button class="btn-cancel" (click)="closeModal()">Anuluj</button>
       <button class="btn-submit" [disabled]="!newPostContent.trim() || submitting" (click)="submitPost()">

@@ -2,7 +2,14 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-// import { PostService } from '../core/post.service'; // ← odkomentuj gdy API gotowe
+
+import {
+  FeedService,
+  FeedPost,
+  FeedComment,
+  CreatePostRequest
+} from '../core/feed.service';
+import { PlaceService, PlacePin } from '../core/place.service';
 
 export interface PostVM {
   id: number;
@@ -12,79 +19,29 @@ export interface PostVM {
   avatarColor: string;
   timeAgo: string;
   placeName: string;
-  placeId: number;
+  placeId: number | null;
   content: string;
   imageUrl?: string;
   likes: number;
   comments: number;
   userLiked: boolean;
+  authoredByMe: boolean;
   newComment: string;
+  commentsOpen: boolean;
+  commentsLoading: boolean;
+  commentList: CommentVM[];
 }
 
-// ─── MOCK DATA ── usuń ten blok gdy API gotowe ───────────────────────────────
-const MOCK_POSTS: PostVM[] = [
-  {
-    id: 1,
-    authorName: 'Anna Kowalska',
-    initials: 'AK',
-    avatarBg: '#E6F1FB',
-    avatarColor: '#0C447C',
-    timeAgo: '12 min temu',
-    placeName: 'Biblioteka Główna',
-    placeId: 1,
-    content: 'Niesamowity widok z biblioteki dziś rano! Polecam zajść po mapę kampusu.',
-    likes: 8,
-    comments: 2,
-    userLiked: false,
-    newComment: ''
-  },
-  {
-    id: 2,
-    authorName: 'Michał Brzezik',
-    initials: 'MB',
-    avatarBg: '#FAEEDA',
-    avatarColor: '#633806',
-    timeAgo: '1 godz. temu',
-    placeName: 'Bar Studencki',
-    placeId: 2,
-    content: 'Właśnie próbowałem nowe kanapki w barze – mocno polecam wersję z awokado! Kolejka nie była długa, obsługa miła.',
-    likes: 14,
-    comments: 5,
-    userLiked: true,
-    newComment: ''
-  },
-  {
-    id: 3,
-    authorName: 'Piotr Wierzbicki',
-    initials: 'PW',
-    avatarBg: '#E1F5EE',
-    avatarColor: '#085041',
-    timeAgo: '2 godz. temu',
-    placeName: 'Fontanna SGGW',
-    placeId: 3,
-    content: 'Dołączyłem do jutrzejszego joggingu po kampusie — ktoś jeszcze? Startujemy o 7:00.',
-    likes: 3,
-    comments: 7,
-    userLiked: false,
-    newComment: ''
-  },
-  {
-    id: 4,
-    authorName: 'Julia Stankiewicz',
-    initials: 'JS',
-    avatarBg: '#FBEAF0',
-    avatarColor: '#72243E',
-    timeAgo: '3 godz. temu',
-    placeName: 'Stołówka DS-2',
-    placeId: 4,
-    content: 'Stołówka działa teraz do 19:00. Miałam nadzieję na późniejszy obiad, niestety...',
-    likes: 2,
-    comments: 4,
-    userLiked: false,
-    newComment: ''
-  }
-];
-// ────────────────────────────────────────────────────────────────────────────
+export interface CommentVM {
+  id: number;
+  authorName: string;
+  initials: string;
+  avatarBg: string;
+  avatarColor: string;
+  timeAgo: string;
+  content: string;
+  authoredByMe: boolean;
+}
 
 @Component({
   selector: 'app-feed',
@@ -95,10 +52,57 @@ const MOCK_POSTS: PostVM[] = [
 })
 export class FeedComponent implements OnInit {
   posts: PostVM[] = [];
+  places: PlacePin[] = [];
+
+  loading = false;
+  errorMessage = '';
+
   showModal = false;
   newPostContent = '';
-  submitting = false;
+  newPostPlaceId: number | null = null;
   selectedImagePreview = '';
+  submitting = false;
+
+  private static readonly AVATAR_PALETTE: ReadonlyArray<{ bg: string; color: string }> = [
+    { bg: '#E6F1FB', color: '#0C447C' },
+    { bg: '#FAEEDA', color: '#633806' },
+    { bg: '#E1F5EE', color: '#085041' },
+    { bg: '#FBEAF0', color: '#72243E' },
+    { bg: '#EEEDFE', color: '#3C3489' },
+    { bg: '#FEF3C7', color: '#78350F' }
+  ];
+
+  constructor(
+    private readonly feedService: FeedService,
+    private readonly placeService: PlaceService
+  ) {}
+
+  ngOnInit(): void {
+    this.loadPosts();
+    this.loadPlaces();
+  }
+
+  loadPosts(): void {
+    this.loading = true;
+    this.errorMessage = '';
+    this.feedService.getFeed().subscribe({
+      next: (data) => {
+        this.posts = data.map((p) => this.toPostVm(p));
+        this.loading = false;
+      },
+      error: () => {
+        this.errorMessage = 'Nie udało się załadować postów.';
+        this.loading = false;
+      }
+    });
+  }
+
+  loadPlaces(): void {
+    this.placeService.getAll().subscribe({
+      next: (data) => (this.places = data),
+      error: () => (this.places = [])
+    });
+  }
 
   onImageSelected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
@@ -109,92 +113,192 @@ export class FeedComponent implements OnInit {
     };
     reader.readAsDataURL(file);
   }
-  // constructor(private postService: PostService) {} // ← odkomentuj gdy API gotowe
-  constructor() {}
-
-  ngOnInit(): void {
-    this.loadPosts();
-  }
-
-  loadPosts(): void {
-    // ── MOCK ── usuń i zamień gdy API gotowe ─────────────────────────────────
-    this.posts = MOCK_POSTS.map(p => ({ ...p }));
-
-    // ── API ── odkomentuj gdy API gotowe ─────────────────────────────────────
-    // this.postService.getAllPosts().subscribe(data => {
-    //   this.posts = data.map(p => ({
-    //     ...p,
-    //     initials: p.authorFirstName[0] + p.authorLastName[0],
-    //     avatarBg: '#E6F1FB',
-    //     avatarColor: '#0C447C',
-    //     timeAgo: this.formatTime(p.createdAt),
-    //     userLiked: p.likedByMe,
-    //     likes: p.likesCount,
-    //     newComment: ''
-    //   }));
-    // });
-  }
 
   toggleLike(post: PostVM): void {
-    post.userLiked = !post.userLiked;
+    const previousLiked = post.userLiked;
+    post.userLiked = !previousLiked;
     post.likes += post.userLiked ? 1 : -1;
-    // ── API ── odkomentuj gdy API gotowe ─────────────────────────────────────
-    // if (post.userLiked) this.postService.likePost(post.id).subscribe();
-    // else this.postService.unlikePost(post.id).subscribe();
+
+    const request$ = post.userLiked
+      ? this.feedService.like(post.id)
+      : this.feedService.unlike(post.id);
+
+    request$.subscribe({
+      next: (updated) => {
+        post.likes = updated.likesCount;
+        post.userLiked = updated.likedByMe;
+      },
+      error: () => {
+        post.userLiked = previousLiked;
+        post.likes += previousLiked ? 1 : -1;
+      }
+    });
+  }
+
+  toggleComments(post: PostVM): void {
+    post.commentsOpen = !post.commentsOpen;
+    if (post.commentsOpen && post.commentList.length === 0) {
+      this.reloadComments(post);
+    }
   }
 
   postComment(post: PostVM): void {
-    if (!post.newComment.trim()) return;
-    post.comments += 1;
-    post.newComment = '';
-    // ── API ── this.postService.addComment(post.id, comment).subscribe();
+    const text = post.newComment.trim();
+    if (!text) return;
+
+    this.feedService.addComment(post.id, { content: text }).subscribe({
+      next: (created) => {
+        post.commentList.push(this.toCommentVm(created));
+        post.comments += 1;
+        post.newComment = '';
+        post.commentsOpen = true;
+      }
+    });
+  }
+
+  deleteComment(post: PostVM, comment: CommentVM): void {
+    this.feedService.deleteComment(comment.id).subscribe({
+      next: () => {
+        post.commentList = post.commentList.filter((c) => c.id !== comment.id);
+        post.comments = Math.max(0, post.comments - 1);
+      }
+    });
   }
 
   submitPost(): void {
-    if (!this.newPostContent.trim() || this.submitting) return;
+    const content = this.newPostContent.trim();
+    if (!content || this.submitting) return;
     this.submitting = true;
 
-
-    // ── MOCK ── usuń gdy API gotowe ──────────────────────────────────────────
-    const newPost: PostVM = {
-      id: Date.now(),
-      authorName: 'Ty',
-      initials: 'TY',
-      avatarBg: '#EEEDFE',
-      avatarColor: '#3C3489',
-      timeAgo: 'przed chwilą',
-      placeName: 'Nieznane miejsce',
-      placeId: 0,
-      content: this.newPostContent,
-      likes: 0,
-      comments: 0,
-      userLiked: false,
-      newComment: '',
-      imageUrl: this.selectedImagePreview || undefined,
+    const body: CreatePostRequest = {
+      content,
+      placeId: this.newPostPlaceId ?? null,
+      imageUrl: this.selectedImagePreview || null
     };
-    this.posts.unshift(newPost);
-    this.closeModal();
-    this.submitting = false;
 
-    // ── API ── odkomentuj gdy API gotowe ─────────────────────────────────────
-    // this.postService.createPost({ idPlace: selectedPlaceId, content: this.newPostContent })
-    //   .subscribe({
-    //     next: (p) => {
-    //       this.posts.unshift({ ...p, initials: ..., avatarBg: ..., userLiked: false, newComment: '' });
-    //       this.closeModal();
-    //       this.submitting = false;
-    //     },
-    //     error: () => { this.submitting = false; }
-    //   });
+    this.feedService.createPost(body).subscribe({
+      next: (created) => {
+        this.posts.unshift(this.toPostVm(created));
+        this.closeModal();
+        this.submitting = false;
+      },
+      error: () => {
+        this.submitting = false;
+      }
+    });
+  }
+
+  deletePost(post: PostVM): void {
+    if (!post.authoredByMe) return;
+    this.feedService.deletePost(post.id).subscribe({
+      next: () => {
+        this.posts = this.posts.filter((p) => p.id !== post.id);
+      }
+    });
   }
 
   closeModal(): void {
     this.showModal = false;
     this.newPostContent = '';
+    this.newPostPlaceId = null;
     this.selectedImagePreview = '';
   }
 
   trackById(_: number, post: PostVM): number {
     return post.id;
+  }
+
+  trackCommentById(_: number, comment: CommentVM): number {
+    return comment.id;
+  }
+
+  // ---------- mapping helpers ----------
+
+  private reloadComments(post: PostVM): void {
+    post.commentsLoading = true;
+    this.feedService.getComments(post.id).subscribe({
+      next: (data) => {
+        post.commentList = data.map((c) => this.toCommentVm(c));
+        post.comments = post.commentList.length;
+        post.commentsLoading = false;
+      },
+      error: () => {
+        post.commentsLoading = false;
+      }
+    });
+  }
+
+  private toPostVm(p: FeedPost): PostVM {
+    const authorName = this.fullName(p.author.firstName, p.author.lastName, p.author.username);
+    const palette = this.pickPalette(p.author.id);
+
+    return {
+      id: p.id,
+      authorName,
+      initials: this.initials(authorName),
+      avatarBg: palette.bg,
+      avatarColor: palette.color,
+      timeAgo: this.formatTimeAgo(p.createdAt),
+      placeName: p.place?.name ?? 'Bez miejsca',
+      placeId: p.place?.id ?? null,
+      content: p.content,
+      imageUrl: p.imageUrl ?? undefined,
+      likes: p.likesCount,
+      comments: p.commentsCount,
+      userLiked: p.likedByMe,
+      authoredByMe: p.authoredByMe,
+      newComment: '',
+      commentsOpen: false,
+      commentsLoading: false,
+      commentList: []
+    };
+  }
+
+  private toCommentVm(c: FeedComment): CommentVM {
+    const authorName = this.fullName(c.author.firstName, c.author.lastName, c.author.username);
+    const palette = this.pickPalette(c.author.id);
+    return {
+      id: c.id,
+      authorName,
+      initials: this.initials(authorName),
+      avatarBg: palette.bg,
+      avatarColor: palette.color,
+      timeAgo: this.formatTimeAgo(c.createdAt),
+      content: c.content,
+      authoredByMe: c.authoredByMe
+    };
+  }
+
+  private fullName(first: string | null, last: string | null, username: string): string {
+    const name = [first, last].filter(Boolean).join(' ').trim();
+    return name || username || 'Użytkownik';
+  }
+
+  private initials(name: string): string {
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return '?';
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+
+  private pickPalette(authorId: number): { bg: string; color: string } {
+    const palette = FeedComponent.AVATAR_PALETTE;
+    const idx = Math.abs(authorId) % palette.length;
+    return palette[idx];
+  }
+
+  private formatTimeAgo(isoDate: string): string {
+    if (!isoDate) return '';
+    const then = new Date(isoDate).getTime();
+    if (Number.isNaN(then)) return '';
+    const diff = Math.max(0, Date.now() - then);
+    const minutes = Math.floor(diff / 60_000);
+    if (minutes < 1) return 'przed chwilą';
+    if (minutes < 60) return `${minutes} min temu`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} godz. temu`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days} dni temu`;
+    return new Date(isoDate).toLocaleDateString('pl-PL');
   }
 }
