@@ -19,16 +19,24 @@
 
     <div class="event-card" *ngFor="let event of events; trackBy: trackById">
 
-      <div class="event-image" *ngIf="event.imageUrl">
-        <img [src]="event.imageUrl" alt="zdjęcie wydarzenia" />
-      </div>
+      <!-- <div class="event-image" *ngIf="event.imageUrl">
+  <img [src]="event.imageUrl" alt="zdjęcie wydarzenia" />
+</div> -->
 
       <div class="event-inner">
 
-        <div class="event-datetime">
-          {{ formatFullDate(event.dateOfEvent) }}, godz. {{ formatHour(event.dateOfEvent) }}
-          <span *ngIf="isToday(event.dateOfEvent)" class="badge badge-today">Dziś!</span>
-          <span *ngIf="isTomorrow(event.dateOfEvent)" class="badge badge-tomorrow">Jutro</span>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div class="event-datetime">
+            {{ formatFullDate(event.dateOfEvent) }}, godz. {{ formatHour(event.dateOfEvent) }}
+            <span *ngIf="isToday(event.dateOfEvent)" class="badge badge-today">Dziś!</span>
+            <span *ngIf="isTomorrow(event.dateOfEvent)" class="badge badge-tomorrow">Jutro</span>
+          </div>
+          <div *ngIf="event.organizedByMe" style="position:relative; flex-shrink:0;">
+            <button class="menu-btn" (click)="event.showMenu = !event.showMenu">⋯</button>
+            <div class="menu-dropdown" *ngIf="event.showMenu">
+              <button (click)="deleteEvent(event); event.showMenu = false">🗑 Usuń wydarzenie</button>
+            </div>
+          </div>
         </div>
 
         <div class="event-title">{{ event.nameOfEvent }}</div>
@@ -58,13 +66,31 @@
 
 
         <div class="card-footer">
-          <button class="vote-btn" [class.liked]="event.userLiked" (click)="toggleLike(event)">
-            ♥ {{ event.likes }}
+          <button class="vote-btn" [class.liked]="event.likedByMe" (click)="toggleLike(event)">
+            ♥ {{ event.likesCount }}
           </button>
-          <button class="vote-btn">💬 {{ event.comments }}</button>
-          <input class="comment-input" placeholder="Skomentuj..."
-                 [(ngModel)]="event.newComment" (keyup.enter)="postComment(event)" />
+          <button class="vote-btn" (click)="toggleComments(event)">
+            💬 {{ event.commentsCount }}
+          </button>
         </div>
+
+        <div class="comments-section" *ngIf="event.showComments">
+  <div class="comment" *ngFor="let c of event.comments">
+    <span><strong>{{ c.authorFirstName }} {{ c.authorLastName }}</strong>: {{ c.content }}</span>
+    <div *ngIf="c.isMyComment" class="comment-menu">
+      <button class="menu-btn" (click)="c.showMenu = !c.showMenu">⋯</button>
+      <div class="menu-dropdown" *ngIf="c.showMenu">
+        <button (click)="deleteComment(event, c); c.showMenu = false">🗑 Usuń komentarz</button>
+      </div>
+    </div>
+  </div>
+  <div class="comment-input-row">
+    <input class="comment-input" placeholder="Skomentuj..."
+           [(ngModel)]="event.newComment"
+           (keyup.enter)="postComment(event)" />
+    <button class="btn-send" (click)="postComment(event)">Wyślij</button>
+  </div>
+</div>
 
       </div>
     </div>
@@ -90,11 +116,10 @@
       <textarea [(ngModel)]="modalComment" placeholder="Opisz wydarzenie..."></textarea>
     </div>
     <div class="form-group">
-      <label>Zdjęcie (opcjonalnie)</label>
-      <input type="file" accept="image/*" (change)="onImageSelected($event)" class="file-input" />
-      <div class="image-preview" *ngIf="selectedImagePreview">
-        <img [src]="selectedImagePreview" alt="podgląd" />
-      </div>
+      <select [(ngModel)]="modalPlaceId" required>
+        <option [ngValue]="null" disabled>Wybierz miejsce</option>
+        <option *ngFor="let p of places" [ngValue]="p.id">{{ p.name }}</option>
+      </select>
     </div>
     <div class="modal-actions">
       <button class="btn-cancel" (click)="closeModal()">Anuluj</button>
