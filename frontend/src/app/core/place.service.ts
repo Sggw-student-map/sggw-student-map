@@ -9,6 +9,7 @@ export interface PlacePin {
   latitude: number;
   longitude: number;
   description?: string;
+  averageRating?: number | null;
 }
 
 export interface CreatePlaceRequest {

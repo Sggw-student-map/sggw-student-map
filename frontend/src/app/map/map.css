@@ -5,3 +5,31 @@
 .cursor-crosshair .leaflet-grab {
   cursor: crosshair !important;
 }
+
+:host ::ng-deep .leaflet-popup-content-wrapper {
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.22);
+}
+
+:host ::ng-deep .map-hover-popup {
+  opacity: 0;
+  transform: translateY(6px) scale(0.985);
+  transition: opacity 320ms ease, transform 180ms ease;
+}
+
+:host ::ng-deep .map-hover-popup.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+:host ::ng-deep .nav-to-gmaps-btn {
+  background: linear-gradient(135deg, #1a73e8 0%, #1558b0 100%) !important;
+  transition: transform 180ms ease, filter 180ms ease, box-shadow 180ms ease !important;
+  box-shadow: 0 6px 14px rgba(26, 115, 232, 0.28);
+}
+
+:host ::ng-deep .nav-to-gmaps-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+  box-shadow: 0 8px 16px rgba(21, 88, 176, 0.35);
+}

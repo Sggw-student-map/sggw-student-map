@@ -1,5 +1,6 @@
 package com.gwozdz1uuu.sggwstudentmap.place;
 
+import com.gwozdz1uuu.sggwstudentmap.review.ReviewRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -13,13 +14,24 @@ public class PlaceService {
     private static final String GOOGLE_MAPS_DIR_BASE = "https://www.google.com/maps/dir/?api=1";
 
     private final PlaceRepository placeRepository;
+    private final ReviewRepository reviewRepository;
 
-    public List<Place> getAllPlaces() {
-        return placeRepository.findAll();
+    public List<PlaceResponse> getAllPlaces() {
+        return placeRepository.findAll().stream()
+                .map(place -> PlaceResponse.from(
+                        place,
+                        reviewRepository.findAverageRatingByPlaceId(place.getId()).orElse(null)
+                ))
+                .toList();
     }
 
-    public List<Place> searchPlaces(String query) {
-        return placeRepository.findByNameContainingIgnoreCase(query);
+    public List<PlaceResponse> searchPlaces(String query) {
+        return placeRepository.findByNameContainingIgnoreCase(query).stream()
+                .map(place -> PlaceResponse.from(
+                        place,
+                        reviewRepository.findAverageRatingByPlaceId(place.getId()).orElse(null)
+                ))
+                .toList();
     }
 
     public Optional<Place> getPlaceById(Integer id) {

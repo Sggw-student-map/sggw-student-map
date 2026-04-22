@@ -172,13 +172,35 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  private buildStarsHtml(rating: number): string {
+    const full = Math.floor(rating);
+    const half = rating - full >= 0.25 && rating - full < 0.75;
+    const empty = 5 - full - (half ? 1 : 0);
+    const star = (type: 'full' | 'half' | 'empty'): string => {
+      if (type === 'full')  return `<span style="color:#f59e0b;font-size:14px">★</span>`;
+      if (type === 'half')  return `<span style="color:#f59e0b;font-size:14px;opacity:.55">★</span>`;
+      return `<span style="color:#d1d5db;font-size:14px">★</span>`;
+    };
+    return Array(full).fill(star('full')).join('') +
+           (half ? star('half') : '') +
+           Array(empty).fill(star('empty')).join('');
+  }
+
   private buildPopupHtml(pin: PlacePin): string {
     const name = this.escapeHtml(pin.name);
     const desc = pin.description ? this.escapeHtml(pin.description) : '';
+    const hasRating = pin.averageRating != null;
+    const ratingHtml = hasRating
+      ? `<div style="display:flex;align-items:center;gap:5px;margin-bottom:8px">
+           ${this.buildStarsHtml(pin.averageRating!)}
+           <span style="font-size:11px;font-weight:700;color:#92400e;background:#fef3c7;padding:1px 6px;border-radius:99px">${pin.averageRating!.toFixed(1)}</span>
+         </div>`
+      : `<div style="font-size:11px;color:#9ca3af;margin-bottom:8px">Brak ocen</div>`;
 
     return `
-      <div style="min-width:180px;font-family:system-ui,sans-serif">
-        <div style="font-weight:700;font-size:14px;margin-bottom:4px">${name}</div>
+      <div style="min-width:190px;font-family:system-ui,sans-serif">
+        <div style="font-weight:700;font-size:14px;margin-bottom:5px">${name}</div>
+        ${ratingHtml}
         ${desc ? `<div style="color:#555;font-size:12px;margin-bottom:8px">${desc}</div>` : ''}
         <button
           class="nav-to-gmaps-btn"
@@ -186,13 +208,11 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
           style="
             display:flex;align-items:center;gap:6px;
             width:100%;padding:7px 12px;
-            background:#1a73e8;color:#fff;
+            color:#fff;
             border:none;border-radius:8px;
             font-size:12px;font-weight:600;
-            cursor:pointer;transition:background .15s;
+            cursor:pointer;
           "
-          onmouseover="this.style.background='#1558b0'"
-          onmouseout="this.style.background='#1a73e8'"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
@@ -227,9 +247,66 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
         this.markerLayer.clearLayers();
         this.markerMap = {};
         pins.forEach((pin) => {
+          let hoverCloseTimeout: number | undefined;
+          let popupCloseAnimationTimeout: number | undefined;
+
+          const clearCloseTimers = (): void => {
+            if (hoverCloseTimeout) {
+              window.clearTimeout(hoverCloseTimeout);
+              hoverCloseTimeout = undefined;
+            }
+            if (popupCloseAnimationTimeout) {
+              window.clearTimeout(popupCloseAnimationTimeout);
+              popupCloseAnimationTimeout = undefined;
+            }
+          };
+
+          const closePopupWithAnimation = (): void => {
+            const popupElement = marker.getPopup()?.getElement();
+            if (popupElement) {
+              popupElement.classList.remove('is-visible');
+              popupCloseAnimationTimeout = window.setTimeout(() => {
+                marker.closePopup();
+              }, 160);
+              return;
+            }
+            marker.closePopup();
+          };
+
+          const scheduleClose = (): void => {
+            clearCloseTimers();
+            hoverCloseTimeout = window.setTimeout(() => {
+              closePopupWithAnimation();
+            }, 120);
+          };
+
           const marker = L.marker([pin.latitude, pin.longitude], { icon: blueIcon })
             .bindPopup(this.buildPopupHtml(pin))
             .addTo(this.markerLayer);
+
+          marker.on('mouseover', () => {
+            clearCloseTimers();
+            marker.openPopup();
+          });
+          marker.on('mouseout', () => scheduleClose());
+
+          marker.on('popupopen', (e: L.PopupEvent) => {
+            const popupElement = e.popup.getElement();
+            if (!popupElement) return;
+
+            popupElement.classList.add('map-hover-popup');
+            requestAnimationFrame(() => popupElement.classList.add('is-visible'));
+            popupElement.addEventListener('mouseenter', clearCloseTimers);
+            popupElement.addEventListener('mouseleave', scheduleClose);
+          });
+
+          marker.on('popupclose', (e: L.PopupEvent) => {
+            const popupElement = e.popup.getElement();
+            if (!popupElement) return;
+            popupElement.removeEventListener('mouseenter', clearCloseTimers);
+            popupElement.removeEventListener('mouseleave', scheduleClose);
+          });
+
           this.markerMap[pin.id] = marker;
         });
       },

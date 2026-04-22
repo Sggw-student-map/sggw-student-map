@@ -16,12 +16,12 @@ public class PlaceController {
     private final PlaceService placeService;
 
     @GetMapping
-    public ResponseEntity<List<Place>> getAllPlaces() {
+    public ResponseEntity<List<PlaceResponse>> getAllPlaces() {
         return ResponseEntity.ok(placeService.getAllPlaces());
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<Place>> searchPlaces(@RequestParam("q") String query) {
+    public ResponseEntity<List<PlaceResponse>> searchPlaces(@RequestParam("q") String query) {
         return ResponseEntity.ok(placeService.searchPlaces(query));
     }
 
