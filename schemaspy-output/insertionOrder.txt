@@ -1,0 +1,16 @@
+users
+places
+eventy
+feed_posts
+routes
+event_comments
+event_interested
+event_likes
+favorites
+feed_post_comments
+feed_post_likes
+friendships
+reviews
+route_points
+users_on_events
+flyway_schema_history

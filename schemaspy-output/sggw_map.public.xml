@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<database name="sggw_map" schema="public" type="PostgreSQL - 17.8 (130b160)">
+   <sequences>
+      <sequence increment="1" name="event_comments_id_seq" startValue="1"/>
+      <sequence increment="1" name="eventy_id_seq" startValue="1"/>
+      <sequence increment="1" name="feed_post_comments_id_seq" startValue="1"/>
+      <sequence increment="1" name="feed_posts_id_seq" startValue="1"/>
+      <sequence increment="1" name="places_id_seq" startValue="1"/>
+      <sequence increment="1" name="reviews_id_seq" startValue="1"/>
+      <sequence increment="1" name="routes_id_seq" startValue="1"/>
+      <sequence increment="1" name="users_id_seq" startValue="1"/>
+   </sequences>
+   <tables>
+      <table name="event_comments" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('event_comments_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="id_event" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="id" foreignKey="event_comments_id_event_fkey" implied="false" onDeleteCascade="true" schema="public" table="eventy"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="id_user" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="id" foreignKey="event_comments_id_user_fkey" implied="false" onDeleteCascade="true" schema="public" table="users"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="content" nullable="false" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="4" name="created_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="event_comments_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_event_comments" unique="false">
+            <column ascending="true" name="id_event"/>
+         </index>
+      </table>
+      <table name="event_interested" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="id_event" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="id" foreignKey="event_interested_id_event_fkey" implied="false" onDeleteCascade="true" schema="public" table="eventy"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="id_user" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="id" foreignKey="event_interested_id_user_fkey" implied="false" onDeleteCascade="true" schema="public" table="users"/>
+         </column>
+         <primaryKey column="id_event" sequenceNumberInPK="1"/>
+         <primaryKey column="id_user" sequenceNumberInPK="2"/>
+         <index name="event_interested_pkey" unique="true">
+            <column ascending="true" name="id_event"/>
+            <column ascending="true" name="id_user"/>
+         </index>
+      </table>
+      <table name="event_likes" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="id_event" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="id" foreignKey="event_likes_id_event_fkey" implied="false" onDeleteCascade="true" schema="public" table="eventy"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="id_user" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="id" foreignKey="event_likes_id_user_fkey" implied="false" onDeleteCascade="true" schema="public" table="users"/>
+         </column>
+         <primaryKey column="id_event" sequenceNumberInPK="1"/>
+         <primaryKey column="id_user" sequenceNumberInPK="2"/>
+         <index name="event_likes_pkey" unique="true">
+            <column ascending="true" name="id_event"/>
+            <column ascending="true" name="id_user"/>
+         </index>
+      </table>
+      <table name="eventy" numRows="5" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('eventy_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial" typeCode="4">
+            <child column="id_event" foreignKey="event_comments_id_event_fkey" implied="false" onDeleteCascade="true" schema="public" table="event_comments"/>
+            <child column="id_event" foreignKey="event_interested_id_event_fkey" implied="false" onDeleteCascade="true" schema="public" table="event_interested"/>
+            <child column="id_event" foreignKey="event_likes_id_event_fkey" implied="false" onDeleteCascade="true" schema="public" table="event_likes"/>
+            <child column="id_eventu" foreignKey="users_on_events_id_eventu_fkey" implied="false" onDeleteCascade="true" schema="public" table="users_on_events"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="name_of_event" nullable="false" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="id_place" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="id" foreignKey="eventy_id_place_fkey" implied="false" onDeleteCascade="true" schema="public" table="places"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="3" name="date_of_event" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="comment" nullable="true" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="organizer_id" nullable="true" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="id" foreignKey="eventy_organizer_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="users"/>
+         </column>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="eventy_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="favorites" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="id" foreignKey="favorites_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="users"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="id_place" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="id" foreignKey="favorites_id_place_fkey" implied="false" onDeleteCascade="true" schema="public" table="places"/>
+         </column>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <primaryKey column="id_place" sequenceNumberInPK="2"/>
+         <index name="favorites_pkey" unique="true">
+            <column ascending="true" name="id"/>
+            <column ascending="true" name="id_place"/>
+         </index>
+      </table>
+      <table name="feed_post_comments" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('feed_post_comments_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="post_id" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="id" foreignKey="feed_post_comments_post_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="feed_posts"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="author_id" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="id" foreignKey="feed_post_comments_author_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="users"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="content" nullable="false" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="4" name="created_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="feed_post_comments_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_feed_post_comments_created_at" unique="false">
+            <column ascending="true" name="created_at"/>
+         </index>
+         <index name="idx_feed_post_comments_post" unique="false">
+            <column ascending="true" name="post_id"/>
+         </index>
+      </table>
+      <table name="feed_post_likes" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="post_id" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="id" foreignKey="feed_post_likes_post_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="feed_posts"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="user_id" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="id" foreignKey="feed_post_likes_user_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="users"/>
+         </column>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="2" name="created_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="post_id" sequenceNumberInPK="1"/>
+         <primaryKey column="user_id" sequenceNumberInPK="2"/>
+         <index name="feed_post_likes_pkey" unique="true">
+            <column ascending="true" name="post_id"/>
+            <column ascending="true" name="user_id"/>
+         </index>
+         <index name="idx_feed_post_likes_user" unique="false">
+            <column ascending="true" name="user_id"/>
+         </index>
+      </table>
+      <table name="feed_posts" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('feed_posts_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial" typeCode="4">
+            <child column="post_id" foreignKey="feed_post_comments_post_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="feed_post_comments"/>
+            <child column="post_id" foreignKey="feed_post_likes_post_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="feed_post_likes"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="author_id" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="id" foreignKey="feed_posts_author_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="users"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="place_id" nullable="true" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="id" foreignKey="feed_posts_place_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="places"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="content" nullable="false" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="image_url" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="5" name="created_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="feed_posts_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_feed_posts_author_id" unique="false">
+            <column ascending="true" name="author_id"/>
+         </index>
+         <index name="idx_feed_posts_created_at" unique="false">
+            <column ascending="false" name="created_at"/>
+         </index>
+         <index name="idx_feed_posts_place_id" unique="false">
+            <column ascending="true" name="place_id"/>
+         </index>
+      </table>
+      <table name="flyway_schema_history" numRows="1" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="installed_rank" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="version" nullable="true" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="description" nullable="false" remarks="" size="200" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="type" nullable="false" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="script" nullable="false" remarks="" size="1000" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="checksum" nullable="true" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="installed_by" nullable="false" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="7" name="installed_on" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="execution_time" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="success" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <primaryKey column="installed_rank" sequenceNumberInPK="1"/>
+         <index name="flyway_schema_history_pk" unique="true">
+            <column ascending="true" name="installed_rank"/>
+         </index>
+         <index name="flyway_schema_history_s_idx" unique="false">
+            <column ascending="true" name="success"/>
+         </index>
+      </table>
+      <table name="friendships" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="user_id1" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="id" foreignKey="friendships_user_id1_fkey" implied="false" onDeleteCascade="true" schema="public" table="users"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="user_id2" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="id" foreignKey="friendships_user_id2_fkey" implied="false" onDeleteCascade="true" schema="public" table="users"/>
+         </column>
+         <column autoUpdated="false" defaultValue="'pending'::character varying" digits="0" id="2" name="status_of_friendship" nullable="true" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="3" name="created_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="user_id1" sequenceNumberInPK="1"/>
+         <primaryKey column="user_id2" sequenceNumberInPK="2"/>
+         <index name="friendships_pkey" unique="true">
+            <column ascending="true" name="user_id1"/>
+            <column ascending="true" name="user_id2"/>
+         </index>
+         <checkConstraint constraint="(user_id1 &lt;&gt; user_id2)" name="check_not_self"/>
+      </table>
+      <table name="places" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('places_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial" typeCode="4">
+            <child column="id_place" foreignKey="eventy_id_place_fkey" implied="false" onDeleteCascade="true" schema="public" table="eventy"/>
+            <child column="id_place" foreignKey="favorites_id_place_fkey" implied="false" onDeleteCascade="true" schema="public" table="favorites"/>
+            <child column="place_id" foreignKey="feed_posts_place_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="feed_posts"/>
+            <child column="place_id" foreignKey="reviews_place_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="reviews"/>
+            <child column="place_id" foreignKey="route_points_place_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="route_points"/>
+            <child column="place_id" foreignKey="routes_place_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="routes"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="name" nullable="false" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="17" id="2" name="latitude" nullable="false" remarks="" size="17" type="float8" typeCode="8"/>
+         <column autoUpdated="false" defaultValue="null" digits="17" id="3" name="longitude" nullable="false" remarks="" size="17" type="float8" typeCode="8"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="description" nullable="true" remarks="" size="1000" type="varchar" typeCode="12"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="places_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="reviews" numRows="10" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('reviews_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="place_id" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="id" foreignKey="reviews_place_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="places"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="user_id" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="id" foreignKey="reviews_user_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="users"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="rating" nullable="true" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="comment" nullable="true" remarks="" size="1000" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="author" nullable="true" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="6" name="created_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="reviews_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <checkConstraint constraint="((rating &gt;= 1) AND (rating &lt;= 5))" name="reviews_rating_check"/>
+      </table>
+      <table name="route_points" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="route_id" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="id" foreignKey="route_points_route_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="routes"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="place_id" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="id" foreignKey="route_points_place_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="places"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="stop_order" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <primaryKey column="route_id" sequenceNumberInPK="1"/>
+         <primaryKey column="place_id" sequenceNumberInPK="2"/>
+         <index name="route_points_pkey" unique="true">
+            <column ascending="true" name="route_id"/>
+            <column ascending="true" name="place_id"/>
+         </index>
+      </table>
+      <table name="routes" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('routes_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial" typeCode="4">
+            <child column="route_id" foreignKey="route_points_route_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="route_points"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="place_id" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="id" foreignKey="routes_place_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="places"/>
+         </column>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="routes_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="users" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('users_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial" typeCode="4">
+            <child column="id_user" foreignKey="event_comments_id_user_fkey" implied="false" onDeleteCascade="true" schema="public" table="event_comments"/>
+            <child column="id_user" foreignKey="event_interested_id_user_fkey" implied="false" onDeleteCascade="true" schema="public" table="event_interested"/>
+            <child column="id_user" foreignKey="event_likes_id_user_fkey" implied="false" onDeleteCascade="true" schema="public" table="event_likes"/>
+            <child column="organizer_id" foreignKey="eventy_organizer_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="eventy"/>
+            <child column="id" foreignKey="favorites_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="favorites"/>
+            <child column="author_id" foreignKey="feed_post_comments_author_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="feed_post_comments"/>
+            <child column="user_id" foreignKey="feed_post_likes_user_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="feed_post_likes"/>
+            <child column="author_id" foreignKey="feed_posts_author_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="feed_posts"/>
+            <child column="user_id1" foreignKey="friendships_user_id1_fkey" implied="false" onDeleteCascade="true" schema="public" table="friendships"/>
+            <child column="user_id2" foreignKey="friendships_user_id2_fkey" implied="false" onDeleteCascade="true" schema="public" table="friendships"/>
+            <child column="user_id" foreignKey="reviews_user_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="reviews"/>
+            <child column="id_users" foreignKey="users_on_events_id_users_fkey" implied="false" onDeleteCascade="true" schema="public" table="users_on_events"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="first_name" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="last_name" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="username" nullable="false" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="password" nullable="true" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="email" nullable="false" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="6" name="created_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="7" name="updated_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="true" digits="0" id="8" name="is_active" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="users_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_users_email" unique="false">
+            <column ascending="true" name="email"/>
+         </index>
+         <index name="idx_users_username" unique="false">
+            <column ascending="true" name="username"/>
+         </index>
+         <index name="users_email_key" unique="true">
+            <column ascending="true" name="email"/>
+         </index>
+         <index name="users_username_key" unique="true">
+            <column ascending="true" name="username"/>
+         </index>
+      </table>
+      <table name="users_on_events" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="id_eventu" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="id" foreignKey="users_on_events_id_eventu_fkey" implied="false" onDeleteCascade="true" schema="public" table="eventy"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="id_users" nullable="false" remarks="" size="10" type="int4" typeCode="4">
+            <parent column="id" foreignKey="users_on_events_id_users_fkey" implied="false" onDeleteCascade="true" schema="public" table="users"/>
+         </column>
+         <primaryKey column="id_eventu" sequenceNumberInPK="1"/>
+         <primaryKey column="id_users" sequenceNumberInPK="2"/>
+         <index name="users_on_events_pkey" unique="true">
+            <column ascending="true" name="id_eventu"/>
+            <column ascending="true" name="id_users"/>
+         </index>
+      </table>
+   </tables>
+</database>
