@@ -2,11 +2,20 @@ import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import * as L from 'leaflet';
-import { PlacePin, PlaceService, CreatePlaceRequest, NavigationResponse } from '../core/place.service';
+import { PlacePin, PlaceService, CreatePlaceRequest, NavigationResponse, PlaceSortOption } from '../core/place.service';
 import { UserStateService } from '../core/user-state.service';
 import { CurrentUser } from '../core/auth.service';
 import { RouterModule } from '@angular/router';
 import { Subject, of, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
+
+interface SortOptionConfig {
+  id: PlaceSortOption;
+  label: string;
+  description: string;
+  dotClass: string;
+}
+
+const HIGHLIGHT_RATING_THRESHOLD = 4.5;
 
 @Component({
   selector: 'app-map',
@@ -44,6 +53,32 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
     { name: 'Powiadomienia', color: 'bg-yellow-200 text-yellow-700', route: '/notifications' }
   ];
 
+  readonly sortOptions: SortOptionConfig[] = [
+    { id: 'RECENT', label: 'Ostatnie', description: 'Najnowsze pinezki', dotClass: 'bg-cyan-200' },
+    { id: 'HIGHEST_RATED', label: 'Najwyżej oceniane', description: 'Posortuj wg średniej oceny', dotClass: 'bg-pink-200' },
+    { id: 'LOWEST_RATED', label: 'Najniżej oceniane', description: 'Pokaż najgorzej oceniane', dotClass: 'bg-orange-200' },
+  ];
+
+  selectedSort: PlaceSortOption = 'RECENT';
+  minRating = 0;
+  onlyRated = false;
+  limit: number | null = null;
+  readonly limitOptions: { value: number | null; label: string }[] = [
+    { value: null, label: 'Wszystkie' },
+    { value: 5, label: '5' },
+    { value: 10, label: '10' },
+    { value: 20, label: '20' },
+    { value: 50, label: '50' },
+  ];
+
+  visibleCount = 0;
+  totalCount = 0;
+  isRatingFilterActive = false;
+
+  private blueIcon!: L.Icon;
+  private highlightIcon!: L.Icon;
+  private reloadSubject = new Subject<void>();
+
   constructor(
     private readonly placeService: PlaceService,
     private readonly userState: UserStateService
@@ -70,9 +105,23 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
       this.searchResults = results;
       this.showSearchResults = results.length > 0;
     });
+
+    this.reloadSubject.pipe(debounceTime(150)).subscribe(() => this.loadPins());
   }
 
   ngAfterViewInit(): void {
+    this.blueIcon = L.icon({
+      iconUrl: '/blue-mark.svg',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+    });
+    this.highlightIcon = L.icon({
+      iconUrl: '/purple-mark.svg',
+      iconSize: [30, 50],
+      iconAnchor: [15, 50],
+      popupAnchor: [1, -42],
+    });
     this.initMap();
     this.loadPins();
   }
@@ -165,6 +214,50 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
     }, 200);
   }
 
+  selectSort(option: PlaceSortOption): void {
+    if (this.selectedSort === option) {
+      return;
+    }
+    this.selectedSort = option;
+    this.scheduleReload();
+  }
+
+  onMinRatingChange(value: number | string): void {
+    const parsed = typeof value === 'string' ? parseFloat(value) : value;
+    this.minRating = Number.isFinite(parsed) ? Math.max(0, Math.min(5, parsed)) : 0;
+    this.scheduleReload();
+  }
+
+  toggleOnlyRated(): void {
+    this.onlyRated = !this.onlyRated;
+    this.scheduleReload();
+  }
+
+  selectLimit(value: number | null): void {
+    if (this.limit === value) {
+      return;
+    }
+    this.limit = value;
+    this.scheduleReload();
+  }
+
+  resetFilters(): void {
+    this.minRating = 0;
+    this.onlyRated = false;
+    this.selectedSort = 'RECENT';
+    this.limit = null;
+    this.scheduleReload();
+  }
+
+  private scheduleReload(): void {
+    this.isRatingFilterActive =
+      this.selectedSort !== 'RECENT' ||
+      this.minRating > 0 ||
+      this.onlyRated ||
+      this.limit !== null;
+    this.reloadSubject.next();
+  }
+
   private removeTempMarker(): void {
     if (this.tempMarker) {
       this.map.removeLayer(this.tempMarker);
@@ -235,18 +328,25 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private loadPins(): void {
-    const blueIcon = L.icon({
-      iconUrl: '/blue-mark.svg',
-      iconSize: [25, 41],
-      iconAnchor: [12, 41],
-      popupAnchor: [1, -34],
-    });
-
-    this.placeService.getAll().subscribe({
+    this.placeService.getAll({
+      sort: this.selectedSort,
+      minRating: this.minRating,
+      onlyRated: this.onlyRated,
+      limit: this.limit,
+    }).subscribe({
       next: (pins: PlacePin[]) => {
         this.markerLayer.clearLayers();
         this.markerMap = {};
+        this.visibleCount = pins.length;
+        if (!this.isRatingFilterActive) {
+          this.totalCount = pins.length;
+        } else if (this.totalCount === 0) {
+          this.totalCount = pins.length;
+        }
         pins.forEach((pin) => {
+          const icon = pin.averageRating != null && pin.averageRating >= HIGHLIGHT_RATING_THRESHOLD
+            ? this.highlightIcon
+            : this.blueIcon;
           let hoverCloseTimeout: number | undefined;
           let popupCloseAnimationTimeout: number | undefined;
 
@@ -280,7 +380,7 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
             }, 120);
           };
 
-          const marker = L.marker([pin.latitude, pin.longitude], { icon: blueIcon })
+          const marker = L.marker([pin.latitude, pin.longitude], { icon })
             .bindPopup(this.buildPopupHtml(pin))
             .addTo(this.markerLayer);
 
@@ -313,6 +413,7 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
       error: () => {
         this.markerLayer.clearLayers();
         this.markerMap = {};
+        this.visibleCount = 0;
       },
     });
   }
