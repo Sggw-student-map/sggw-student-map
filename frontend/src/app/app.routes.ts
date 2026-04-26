@@ -7,6 +7,7 @@ import { FriendsComponent } from './friends/friends.component';
 import { ProfileComponent } from './profile/profile.component';
 import { FeedComponent } from './feed/feed.component';
 import { EventsComponent } from './events/events.component';
+import { SettingsComponent } from './settings/settings.component';
 
 export const routes: Routes = [
     { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -18,5 +19,6 @@ export const routes: Routes = [
     { path: 'profile', component: ProfileComponent },
     { path: 'feed', component: FeedComponent },
     { path: 'events', component: EventsComponent },
+    { path: 'settings', component: SettingsComponent },
     { path: '**', redirectTo: 'login' }
 ];

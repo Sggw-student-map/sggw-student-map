@@ -52,4 +52,13 @@ public interface FriendshipRepository extends JpaRepository<Friendship, Friendsh
         )
     """, nativeQuery = true)
     List<Object[]> findUsersNotInFriendship(@Param("userId") Integer userId);
+
+    @Query("""
+        SELECT CASE WHEN COUNT(f) > 0 THEN true ELSE false END
+        FROM Friendship f
+        WHERE ((f.userId1 = :userA AND f.userId2 = :userB)
+            OR (f.userId1 = :userB AND f.userId2 = :userA))
+        AND f.status = 'accepted'
+    """)
+    boolean areAcceptedFriends(@Param("userA") Integer userA, @Param("userB") Integer userB);
 }

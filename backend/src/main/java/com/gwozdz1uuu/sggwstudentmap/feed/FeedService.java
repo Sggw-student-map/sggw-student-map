@@ -1,7 +1,9 @@
 package com.gwozdz1uuu.sggwstudentmap.feed;
 
 import com.gwozdz1uuu.sggwstudentmap.auth.AuthService;
+import com.gwozdz1uuu.sggwstudentmap.friendship.FriendshipRepository;
 import com.gwozdz1uuu.sggwstudentmap.place.PlaceRepository;
+import com.gwozdz1uuu.sggwstudentmap.settings.UserSettingsRepository;
 import com.gwozdz1uuu.sggwstudentmap.user.User;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -25,7 +27,8 @@ public class FeedService {
     private final FeedPostCommentRepository commentRepository;
     private final PlaceRepository placeRepository;
     private final AuthService authService;
-
+    private final UserSettingsRepository userSettingsRepository;
+    private final FriendshipRepository friendshipRepository;
 
     public List<FeedPostResponse> getFeed(int page, int size) {
         Integer viewerId = currentUserIdOrZero();
@@ -34,6 +37,7 @@ public class FeedService {
         Pageable pageable = PageRequest.of(safePage, safeSize);
 
         return postRepository.findFeed(viewerId, pageable).stream()
+                .filter(p -> canViewPost(p.getAuthorId(), viewerId))
                 .map(p -> toResponse(p, viewerId))
                 .toList();
     }
@@ -72,7 +76,11 @@ public class FeedService {
     @Transactional
     public FeedPostResponse like(Integer postId) {
         User me = requireCurrentUser();
-        requirePostExists(postId);
+        FeedPost post = getPostOrThrow(postId);
+        
+        if (!canViewPost(post.getAuthorId(), me.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot access this post");
+        }
 
         if (!likeRepository.existsByPostIdAndUserId(postId, me.getId())) {
             FeedPostLike like = new FeedPostLike();
@@ -87,7 +95,11 @@ public class FeedService {
     @Transactional
     public FeedPostResponse unlike(Integer postId) {
         User me = requireCurrentUser();
-        requirePostExists(postId);
+        FeedPost post = getPostOrThrow(postId);
+        
+        if (!canViewPost(post.getAuthorId(), me.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot access this post");
+        }
 
         if (likeRepository.existsByPostIdAndUserId(postId, me.getId())) {
             likeRepository.deleteByPostIdAndUserId(postId, me.getId());
@@ -95,11 +107,13 @@ public class FeedService {
         return toResponse(postRepository.findProjectionById(postId, me.getId()), me.getId());
     }
 
-    // ---------------- Comments ----------------
-
     public List<FeedCommentResponse> getComments(Integer postId) {
-        requirePostExists(postId);
+        FeedPost post = getPostOrThrow(postId);
         Integer viewerId = currentUserIdOrZero();
+        
+        if (!canViewPost(post.getAuthorId(), viewerId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot access this post");
+        }
 
         return commentRepository.findCommentProjectionsByPostId(postId).stream()
                 .map(c -> new FeedCommentResponse(
@@ -121,7 +135,11 @@ public class FeedService {
     @Transactional
     public FeedCommentResponse addComment(Integer postId, CreateCommentRequest request) {
         User me = requireCurrentUser();
-        requirePostExists(postId);
+        FeedPost post = getPostOrThrow(postId);
+        
+        if (!canViewPost(post.getAuthorId(), me.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot access this post");
+        }
 
         FeedPostComment saved = commentRepository.save(FeedPostComment.builder()
                 .postId(postId)
@@ -145,7 +163,6 @@ public class FeedService {
         FeedPostComment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment not found"));
 
-        // Allow delete by comment author OR by the post author (moderation on own post).
         boolean isCommentAuthor = comment.getAuthorId().equals(me.getId());
         boolean isPostAuthor = postRepository.findById(comment.getPostId())
                 .map(p -> p.getAuthorId().equals(me.getId()))
@@ -205,15 +222,39 @@ public class FeedService {
         return me == null ? 0 : me.getId();
     }
 
-    private void requirePostExists(Integer postId) {
-        if (!postRepository.existsById(postId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found");
-        }
+    private FeedPost getPostOrThrow(Integer postId) {
+        return postRepository.findById(postId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
     }
 
     private static String emptyToNull(String value) {
         if (value == null) return null;
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private boolean canViewPost(Integer authorId, Integer viewerId) {
+        // Edge case: post bez autora
+        if (authorId == null) {
+            return true;
+        }
+
+        boolean isPrivate = userSettingsRepository.findById(authorId)
+                .map(s -> Boolean.TRUE.equals(s.getPrivateAccount()))
+                .orElse(false);
+
+        if (!isPrivate) {
+            return true;
+        }
+        
+        if (viewerId == null || viewerId == 0) {
+            return false;
+        }
+
+        if (authorId.equals(viewerId)) {
+            return true;
+        }
+        
+        return friendshipRepository.areAcceptedFriends(authorId, viewerId);
     }
 }

@@ -1,5 +1,7 @@
 package com.gwozdz1uuu.sggwstudentmap.user;
 
+import com.gwozdz1uuu.sggwstudentmap.settings.UserSettings;
+import com.gwozdz1uuu.sggwstudentmap.settings.UserSettingsRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -12,6 +14,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserSettingsRepository userSettingsRepository;
 
     public List<UserResponse> getAllUsers() {
         return userRepository.findAll()
@@ -43,6 +46,11 @@ public class UserService {
         user.setIsActive(true);
 
         var saved = userRepository.save(user);
+
+        UserSettings settings = new UserSettings();
+        settings.setIdUser(saved.getId());
+        userSettingsRepository.save(settings);
+
         return UserResponse.from(saved);
     }
 }
