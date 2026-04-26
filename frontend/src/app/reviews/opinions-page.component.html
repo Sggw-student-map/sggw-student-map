@@ -1,38 +1,24 @@
 <div class="page-wrapper">
 
-  <!-- Sidebar -->
   <aside class="sidebar">
     <button class="back-btn" routerLink="/map">&#8592; Wróć do Mapki</button>
     <nav>
-      <a class="nav-item" routerLink="/feed">
-        <span class="dot blue"></span>Feed
-      </a>
-      <a class="nav-item" routerLink="/events">
-        <span class="dot green"></span>Wydarzenia
-      </a>
-      <a class="nav-item active" routerLink="/opinions">
-        <span class="dot purple"></span>Opinie
-      </a>
-      <a class="nav-item" routerLink="/friends">
-        <span class="dot pink"></span>Znajomi
-      </a>
-      <a class="nav-item" routerLink="/notifications">
-        <span class="dot yellow"></span>Powiadomienia
-      </a>
-      <a class="nav-item" routerLink="/profile">
-        <span class="dot red"></span>Profil
-      </a>
-      <a class="nav-item" routerLink="/settings">
-        <span class="dot gray"></span>Ustawienia
-      </a>
+      <a class="nav-item" routerLink="/feed"><span class="dot blue"></span>Feed</a>
+      <a class="nav-item" routerLink="/events"><span class="dot green"></span>Wydarzenia</a>
+      <a class="nav-item active" routerLink="/opinions"><span class="dot purple"></span>Opinie</a>
+      <a class="nav-item" routerLink="/friends"><span class="dot pink"></span>Znajomi</a>
+      <a class="nav-item" routerLink="/notifications"><span class="dot yellow"></span>Powiadomienia</a>
+      <a class="nav-item" routerLink="/profile"><span class="dot red"></span>Profil</a>
+      <a class="nav-item" routerLink="/settings"><span class="dot gray"></span>Ustawienia</a>
     </nav>
   </aside>
 
-  <!-- Main content -->
   <main class="main-content">
-    <button class="add-btn" (click)="openModal()">+ Dodaj opinię</button>
+
+    <p class="empty" *ngIf="reviews.length === 0">Brak opinii. Bądź pierwszy!</p>
 
     <div class="review-card" *ngFor="let review of reviews">
+
       <div class="card-header">
         <div class="avatar" [style.background]="review.avatarBg" [style.color]="review.avatarColor">
           {{ review.initials }}
@@ -41,8 +27,7 @@
           <span class="username">{{ review.author }}</span>
           <span class="time">{{ review.time }}</span>
           <div class="stars">
-            <span *ngFor="let s of starsArray(review.rating)"
-                  [class.filled]="s">★</span>
+            <span *ngFor="let s of starsArray(review.rating)" [class.filled]="s">★</span>
           </div>
         </div>
       </div>
@@ -57,14 +42,18 @@
           <p class="review-text">"{{ review.comment }}"</p>
         </div>
       </div>
+
     </div>
+
   </main>
 </div>
 
-<!-- Add review modal -->
+<button class="fab" (click)="openModal()" title="Dodaj opinię">+ Dodaj opinię</button>
+
 <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
   <div class="modal" (click)="$event.stopPropagation()">
     <h3>Dodaj opinię</h3>
+
     <select [(ngModel)]="modalPlaceId" class="place-select">
       <option [ngValue]="null" disabled selected>Wybierz miejsce...</option>
       <option *ngFor="let place of places" [ngValue]="place.id">{{ place.name }}</option>
@@ -77,9 +66,11 @@
             (mouseleave)="hovered = 0"
             (click)="modalRating = s">★</span>
     </div>
+
     <textarea [(ngModel)]="modalComment"
               placeholder="Napisz opinię o tym miejscu..."
               rows="3"></textarea>
+
     <div class="modal-actions">
       <button class="btn-cancel" (click)="closeModal()">Anuluj</button>
       <button class="btn-submit"
