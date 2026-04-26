@@ -133,6 +133,18 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  zoomIn(): void {
+    this.map.zoomIn(1);
+  }
+
+  zoomOut(): void {
+    this.map.zoomOut(1);
+  }
+
+  resetView(): void {
+    this.map.setView([52.161, 21.047], 16, { animate: true });
+  }
+
   toggleAddPlaceMode(): void {
     this.addPlaceMode = !this.addPlaceMode;
     if (!this.addPlaceMode) {
@@ -433,10 +445,10 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
       zoomControl: false,
       dragging: true,
       keyboard: false,
-      scrollWheelZoom: false,
-      doubleClickZoom: false,
+      scrollWheelZoom: true,
+      doubleClickZoom: true,
       boxZoom: false,
-      touchZoom: false,
+      touchZoom: true,
     });
 
     L.tileLayer(
