@@ -9,6 +9,7 @@ import { UserStateService } from '../core/user-state.service';
   standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './profile.component.html',
+  styleUrls: ['./profile.component.css']
 })
 export class ProfileComponent implements OnInit {
   user: CurrentUser | null = null;
