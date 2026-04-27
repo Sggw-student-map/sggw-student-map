@@ -1,7 +1,9 @@
 package com.gwozdz1uuu.sggwstudentmap.event;
 
+import com.gwozdz1uuu.sggwstudentmap.friendship.FriendshipRepository;
 import com.gwozdz1uuu.sggwstudentmap.place.Place;
 import com.gwozdz1uuu.sggwstudentmap.place.PlaceRepository;
+import com.gwozdz1uuu.sggwstudentmap.settings.UserSettingsRepository;
 import com.gwozdz1uuu.sggwstudentmap.user.User;
 import com.gwozdz1uuu.sggwstudentmap.user.UserRepository;
 import lombok.AllArgsConstructor;
@@ -22,10 +24,13 @@ public class EventService {
     private final EventCommentRepository eventCommentRepository;
     private final UserRepository userRepository;
     private final PlaceRepository placeRepository;
+    private final UserSettingsRepository userSettingsRepository;
+    private final FriendshipRepository friendshipRepository;
 
     public List<EventResponse> getAllEvents(Integer currentUserId) {
         return eventRepository.findAllOrderByDate()
                 .stream()
+                .filter(e -> canViewEvent(e.getOrganizerId(), currentUserId))
                 .map(e -> toResponse(e, currentUserId))
                 .toList();
     }
@@ -43,8 +48,13 @@ public class EventService {
     }
 
     public void joinEvent(Integer currentUserId, Integer eventId) {
-        eventRepository.findById(eventId)
+        Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
+        
+        if (!canViewEvent(event.getOrganizerId(), currentUserId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot access this event");
+        }
+        
         userOnEventRepository.findByIdEventuAndIdUsers(eventId, currentUserId).ifPresent(u -> {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Already joined");
         });
@@ -58,8 +68,13 @@ public class EventService {
     }
 
     public void likeEvent(Integer currentUserId, Integer eventId) {
-        eventRepository.findById(eventId)
+        Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
+        
+        if (!canViewEvent(event.getOrganizerId(), currentUserId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot access this event");
+        }
+        
         eventLikeRepository.findByIdEventAndIdUser(eventId, currentUserId).ifPresent(l -> {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Already liked");
         });
@@ -73,8 +88,13 @@ public class EventService {
     }
 
     public void markInterested(Integer currentUserId, Integer eventId) {
-        eventRepository.findById(eventId)
+        Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
+        
+        if (!canViewEvent(event.getOrganizerId(), currentUserId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot access this event");
+        }
+        
         eventInterestedRepository.findByIdEventAndIdUser(eventId, currentUserId).ifPresent(i -> {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Already interested");
         });
@@ -88,8 +108,13 @@ public class EventService {
     }
 
     public CommentResponse addComment(Integer currentUserId, Integer eventId, CommentRequest request) {
-        eventRepository.findById(eventId)
+        Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
+        
+        if (!canViewEvent(event.getOrganizerId(), currentUserId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot access this event");
+        }
+        
         User author = userRepository.findById(currentUserId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         EventComment comment = new EventComment();
@@ -101,6 +126,13 @@ public class EventService {
     }
 
     public List<CommentResponse> getComments(Integer currentUserId, Integer eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
+        
+        if (!canViewEvent(event.getOrganizerId(), currentUserId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot access this event");
+        }
+        
         return eventCommentRepository.findByIdEventOrderByCreatedAtAsc(eventId)
                 .stream()
                 .map(c -> {
@@ -167,5 +199,29 @@ public class EventService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not your comment");
         }
         eventCommentRepository.delete(comment);
+    }
+
+    private boolean canViewEvent(Integer authorId, Integer viewerId) {
+        // Edge case: wydarzenie bez organizera
+        if (authorId == null) {
+            return true;
+        }
+        
+        boolean isPrivate = userSettingsRepository.findById(authorId)
+                .map(s -> Boolean.TRUE.equals(s.getPrivateAccount()))
+                .orElse(false);
+        
+        if (!isPrivate) {
+            return true;
+        }
+        
+        if (viewerId == null) {
+            return false;
+        }
+        if (authorId.equals(viewerId)) {
+            return true;
+        }
+        
+        return friendshipRepository.areAcceptedFriends(authorId, viewerId);
     }
 }
