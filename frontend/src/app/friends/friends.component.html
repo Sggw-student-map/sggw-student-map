@@ -1,90 +1,124 @@
-<div class="friends-container">
+<div class="page-wrapper">
 
-  <!-- Back Navigation -->
-  <button class="btn back-btn" (click)="goToMainPage()">
-    &larr; Back to Map
-  </button>
+  <aside class="sidebar">
+    <button class="back-btn" routerLink="/map">&#8592; Wróć do Mapki</button>
+    <nav>
+      <a class="nav-item" routerLink="/feed"><span class="dot blue"></span>Feed</a>
+      <a class="nav-item" routerLink="/events"><span class="dot green"></span>Wydarzenia</a>
+      <a class="nav-item" routerLink="/opinions"><span class="dot purple"></span>Opinie</a>
+      <a class="nav-item active" routerLink="/friends"><span class="dot pink"></span>Znajomi</a>
+      <a class="nav-item" routerLink="/profile"><span class="dot red"></span>Profil</a>
+      <a class="nav-item" routerLink="/settings"><span class="dot gray"></span>Ustawienia</a>
+    </nav>
+  </aside>
 
-  <!-- Tabs -->
-  <div class="tabs">
-    <button [class.active]="activeTab === 'friends'" (click)="setTab('friends')">
-      Znajomi ({{ friends.length }})
-    </button>
-    <button [class.active]="activeTab === 'received'" (click)="setTab('received')">
-      Zaproszenia ({{ pendingReceived.length }})
-    </button>
-    <button [class.active]="activeTab === 'sent'" (click)="setTab('sent')">
-      Wysłane ({{ pendingSent.length }})
-    </button>
-    <button [class.active]="activeTab === 'invite'" (click)="setTab('invite')">
-      Dodaj znajomego
-    </button>
-  </div>
+  <main class="main-content">
 
-  <!-- Flash message -->
-  <p class="message" *ngIf="message">{{ message }}</p>
+    <!-- Sub-tabs -->
+    <div class="tabs-bar">
+      <button class="tab-btn" [class.active]="activeTab === 'friends'" (click)="setTab('friends')">
+        👥 Znajomi
+        <span class="badge" *ngIf="friends.length > 0">{{ friends.length }}</span>
+      </button>
+      <button class="tab-btn" [class.active]="activeTab === 'received'" (click)="setTab('received')">
+        📩 Zaproszenia
+        <span class="badge accent" *ngIf="pendingReceived.length > 0">{{ pendingReceived.length }}</span>
+      </button>
+      <button class="tab-btn" [class.active]="activeTab === 'sent'" (click)="setTab('sent')">
+        📤 Wysłane
+        <span class="badge" *ngIf="pendingSent.length > 0">{{ pendingSent.length }}</span>
+      </button>
+      <button class="tab-btn" [class.active]="activeTab === 'invite'" (click)="setTab('invite')">
+        ➕ Dodaj znajomego
+      </button>
+    </div>
 
-  <!-- Friends list -->
-  <div *ngIf="activeTab === 'friends'">
-    <p *ngIf="friends.length === 0" class="empty">Nie masz jeszcze znajomych.</p>
-    <div class="user-card" *ngFor="let f of friends">
-      <div class="user-info">
-        <span class="avatar">{{ f.user.username[0].toUpperCase() }}</span>
-        <div>
-          <strong>{{ f.user.firstName }} {{ f.user.lastName }}</strong>
-          <small>&#64;{{ f.user.username }}</small>
+    <!-- Flash message -->
+    <div class="flash-msg" *ngIf="message">{{ message }}</div>
+
+    <!-- Loading -->
+    <div class="loading-state" *ngIf="loading">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- Friends list -->
+    <div class="content-card" *ngIf="activeTab === 'friends' && !loading">
+      <div class="section-label">Moi znajomi</div>
+      <div class="empty-state" *ngIf="friends.length === 0">
+        <div class="empty-icon">👥</div>
+        <p>Nie masz jeszcze znajomych.</p>
+      </div>
+      <div class="user-row" *ngFor="let f of friends">
+        <div class="user-info">
+          <span class="avatar">{{ f.user.username[0].toUpperCase() }}</span>
+          <div class="user-text">
+            <strong>{{ f.user.firstName }} {{ f.user.lastName }}</strong>
+            <small>&#64;{{ f.user.username }}</small>
+          </div>
+        </div>
+        <button class="btn-danger" (click)="removeFriend(f.user.id)">Usuń</button>
+      </div>
+    </div>
+
+    <!-- Received invites -->
+    <div class="content-card" *ngIf="activeTab === 'received' && !loading">
+      <div class="section-label">Otrzymane zaproszenia</div>
+      <div class="empty-state" *ngIf="pendingReceived.length === 0">
+        <div class="empty-icon">📩</div>
+        <p>Brak oczekujących zaproszeń.</p>
+      </div>
+      <div class="user-row" *ngFor="let f of pendingReceived">
+        <div class="user-info">
+          <span class="avatar">{{ f.user.username[0].toUpperCase() }}</span>
+          <div class="user-text">
+            <strong>{{ f.user.firstName }} {{ f.user.lastName }}</strong>
+            <small>&#64;{{ f.user.username }}</small>
+          </div>
+        </div>
+        <div class="row-actions">
+          <button class="btn-success" (click)="accept(f.user.id)">Akceptuj</button>
+          <button class="btn-danger" (click)="reject(f.user.id)">Odrzuć</button>
         </div>
       </div>
-      <button class="btn danger" (click)="removeFriend(f.user.id)">Usuń</button>
     </div>
-  </div>
 
-  <!-- Received invites -->
-  <div *ngIf="activeTab === 'received'">
-    <p *ngIf="pendingReceived.length === 0" class="empty">Brak oczekujących zaproszeń.</p>
-    <div class="user-card" *ngFor="let f of pendingReceived">
-      <div class="user-info">
-        <span class="avatar">{{ f.user.username[0].toUpperCase() }}</span>
-        <div>
-          <strong>{{ f.user.firstName }} {{ f.user.lastName }}</strong>
-          <small>&#64;{{ f.user.username }}</small>
+    <!-- Sent invites -->
+    <div class="content-card" *ngIf="activeTab === 'sent' && !loading">
+      <div class="section-label">Wysłane zaproszenia</div>
+      <div class="empty-state" *ngIf="pendingSent.length === 0">
+        <div class="empty-icon">📤</div>
+        <p>Nie wysłałeś żadnych zaproszeń.</p>
+      </div>
+      <div class="user-row" *ngFor="let f of pendingSent">
+        <div class="user-info">
+          <span class="avatar">{{ f.user.username[0].toUpperCase() }}</span>
+          <div class="user-text">
+            <strong>{{ f.user.firstName }} {{ f.user.lastName }}</strong>
+            <small>&#64;{{ f.user.username }}</small>
+          </div>
         </div>
-      </div>
-      <div class="actions">
-        <button class="btn success" (click)="accept(f.user.id)">Akceptuj</button>
-        <button class="btn danger" (click)="reject(f.user.id)">Odrzuć</button>
+        <button class="btn-ghost" (click)="cancelInvite(f.user.id)">Anuluj</button>
       </div>
     </div>
-  </div>
 
-  <!-- Sent invites -->
-  <div *ngIf="activeTab === 'sent'">
-    <p *ngIf="pendingSent.length === 0" class="empty">Nie wysłałeś żadnych zaproszeń.</p>
-    <div class="user-card" *ngFor="let f of pendingSent">
-      <div class="user-info">
-        <span class="avatar">{{ f.user.username[0].toUpperCase() }}</span>
-        <div>
-          <strong>{{ f.user.firstName }} {{ f.user.lastName }}</strong>
-          <small>&#64;{{ f.user.username }}</small>
+    <!-- Invite new friends -->
+    <div class="content-card" *ngIf="activeTab === 'invite' && !loading">
+      <div class="section-label">Dodaj znajomego</div>
+      <div class="empty-state" *ngIf="invitableUsers.length === 0">
+        <div class="empty-icon">🎉</div>
+        <p>Wszyscy użytkownicy są już Twoimi znajomymi.</p>
+      </div>
+      <div class="user-row" *ngFor="let u of invitableUsers">
+        <div class="user-info">
+          <span class="avatar">{{ u.username[0].toUpperCase() }}</span>
+          <div class="user-text">
+            <strong>{{ u.firstName }} {{ u.lastName }}</strong>
+            <small>&#64;{{ u.username }}</small>
+          </div>
         </div>
+        <button class="btn-primary" (click)="sendInvite(u.id)">Zaproś</button>
       </div>
-      <button class="btn danger" (click)="cancelInvite(f.user.id)">Anuluj</button>
     </div>
-  </div>
 
-  <!-- Invite new friends -->
-  <div *ngIf="activeTab === 'invite'">
-    <p *ngIf="invitableUsers.length === 0" class="empty">Wszyscy użytkownicy są już Twoimi znajomymi.</p>
-    <div class="user-card" *ngFor="let u of invitableUsers">
-      <div class="user-info">
-        <span class="avatar">{{ u.username[0].toUpperCase() }}</span>
-        <div>
-          <strong>{{ u.firstName }} {{ u.lastName }}</strong>
-          <small>&#64;{{ u.username }}</small>
-        </div>
-      </div>
-      <button class="btn primary" (click)="sendInvite(u.id)">Zaproś</button>
-    </div>
-  </div>
-
+  </main>
 </div>

@@ -49,8 +49,8 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
     { name: 'Feed', color: 'bg-sky-200 text-sky-700',route: '/feed'  },
     { name: 'Wydarzenia', color: 'bg-green-200 text-green-700', route: '/events'  },
     { name: 'Opinie', color: 'bg-pink-200 text-pink-700', route: '/opinions' },
-    { name: 'Znajomi', color: 'bg-orange-200 text-orange-700', route: '/friends' },
-    { name: 'Powiadomienia', color: 'bg-yellow-200 text-yellow-700', route: '/notifications' }
+    { name: 'Znajomi', color: 'bg-orange-200 text-orange-700', route: '/friends' }
+    // { name: 'Powiadomienia', color: 'bg-yellow-200 text-yellow-700', route: '/notifications' }
   ];
 
   readonly sortOptions: SortOptionConfig[] = [
