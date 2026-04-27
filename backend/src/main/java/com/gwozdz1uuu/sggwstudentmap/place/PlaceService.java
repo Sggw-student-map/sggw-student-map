@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 @Service
 @AllArgsConstructor
@@ -17,12 +18,39 @@ public class PlaceService {
     private final ReviewRepository reviewRepository;
 
     public List<PlaceResponse> getAllPlaces() {
-        return placeRepository.findAll().stream()
+        return getAllPlaces(PlaceSortOption.RECENT, null, false, null);
+    }
+
+    public List<PlaceResponse> getAllPlaces(
+            PlaceSortOption sort,
+            Double minRating,
+            boolean onlyRated,
+            Integer limit
+    ) {
+        PlaceSortOption effectiveSort = sort != null ? sort : PlaceSortOption.RECENT;
+
+        Stream<PlaceResponse> stream = placeRepository.findAll().stream()
                 .map(place -> PlaceResponse.from(
                         place,
                         reviewRepository.findAverageRatingByPlaceId(place.getId()).orElse(null)
-                ))
-                .toList();
+                ));
+
+        if (onlyRated) {
+            stream = stream.filter(p -> p.averageRating() != null);
+        }
+
+        if (minRating != null) {
+            double threshold = minRating;
+            stream = stream.filter(p -> p.averageRating() != null && p.averageRating() >= threshold);
+        }
+
+        Stream<PlaceResponse> sorted = stream.sorted(effectiveSort.comparator());
+
+        if (limit != null && limit > 0) {
+            sorted = sorted.limit(limit);
+        }
+
+        return sorted.toList();
     }
 
     public List<PlaceResponse> searchPlaces(String query) {

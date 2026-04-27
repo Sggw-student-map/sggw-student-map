@@ -16,8 +16,16 @@ public class PlaceController {
     private final PlaceService placeService;
 
     @GetMapping
-    public ResponseEntity<List<PlaceResponse>> getAllPlaces() {
-        return ResponseEntity.ok(placeService.getAllPlaces());
+    public ResponseEntity<List<PlaceResponse>> getAllPlaces(
+            @RequestParam(name = "sort", required = false) String sort,
+            @RequestParam(name = "minRating", required = false) Double minRating,
+            @RequestParam(name = "onlyRated", required = false, defaultValue = "false") boolean onlyRated,
+            @RequestParam(name = "limit", required = false) Integer limit
+    ) {
+        Double safeMinRating = (minRating != null && minRating > 0) ? minRating : null;
+        Integer safeLimit = (limit != null && limit > 0) ? limit : null;
+        PlaceSortOption sortOption = PlaceSortOption.fromString(sort);
+        return ResponseEntity.ok(placeService.getAllPlaces(sortOption, safeMinRating, onlyRated, safeLimit));
     }
 
     @GetMapping("/search")

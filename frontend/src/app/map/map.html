@@ -39,22 +39,100 @@
       </div>
 
       <div class="bg-white/60 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-5 flex-shrink-0 pointer-events-auto">
-        <h3 class="text-base font-semibold text-gray-900 mb-4">Sortuj pinezki według:</h3>
-        <ul class="space-y-3 text-sm text-gray-800">
-          <li class="flex items-center justify-between p-2 rounded-xl bg-green-50/50 transition-colors">
-            <span class="flex items-center gap-3"><div class="w-6 h-6 rounded-full bg-cyan-200 text-cyan-700 flex items-center justify-center shadow-sm"></div> Ostatnie</span>
-            <span class="text-green-600 font-bold">✓</span>
-          </li>
-          <li class="flex items-center gap-3 p-2 text-gray-600 hover:bg-white/50 rounded-xl transition-colors">
-            <div class="w-6 h-6 rounded-full bg-pink-200 text-pink-700 flex items-center justify-center shadow-sm"></div> Najwyżej oceniane
-          </li>
-          <li class="flex items-center gap-3 p-2 text-gray-600 hover:bg-white/50 rounded-xl transition-colors">
-            <div class="w-6 h-6 rounded-full bg-orange-200 text-orange-700 flex items-center justify-center shadow-sm"></div> Znajomi
-          </li>
-          <li class="flex items-center gap-3 p-2 text-gray-600 hover:bg-white/50 rounded-xl transition-colors">
-            <div class="w-6 h-6 rounded-full bg-red-200 text-red-700 flex items-center justify-center shadow-sm"></div> Zapisane
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-base font-semibold text-gray-900">Sortuj pinezki według:</h3>
+          <span class="text-[11px] font-medium text-green-700 bg-green-100 px-2 py-0.5 rounded-full"
+                [title]="'Widoczne pinezki / wszystkie miejsca'">
+            {{ visibleCount }} / {{ totalCount }}
+          </span>
+        </div>
+
+        <ul class="space-y-2 text-sm text-gray-800">
+          <li *ngFor="let option of sortOptions">
+            <button type="button"
+                    (click)="selectSort(option.id)"
+                    [attr.aria-pressed]="selectedSort === option.id"
+                    class="w-full flex items-center justify-between gap-3 p-2 rounded-xl transition-colors text-left"
+                    [ngClass]="selectedSort === option.id ? 'bg-green-50/70 ring-1 ring-green-200' : 'hover:bg-white/50 text-gray-600'">
+              <span class="flex items-center gap-3 min-w-0">
+                <span class="w-6 h-6 rounded-full flex items-center justify-center shadow-sm shrink-0"
+                      [ngClass]="option.dotClass"></span>
+                <span class="flex flex-col min-w-0">
+                  <span class="font-medium leading-tight truncate"
+                        [ngClass]="selectedSort === option.id ? 'text-gray-900' : ''">{{ option.label }}</span>
+                  <span class="text-[11px] text-gray-500 truncate">{{ option.description }}</span>
+                </span>
+              </span>
+              <span *ngIf="selectedSort === option.id" class="text-green-600 font-bold shrink-0">✓</span>
+            </button>
           </li>
         </ul>
+
+        <div class="h-px bg-white/40 my-4"></div>
+
+        <div class="space-y-3">
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="text-xs font-semibold text-gray-700 uppercase tracking-wide">Minimalna ocena</label>
+              <span class="flex items-center gap-1 text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+                <span style="color:#f59e0b">★</span>
+                <ng-container *ngIf="minRating > 0; else anyRating">{{ minRating | number:'1.1-1' }}+</ng-container>
+                <ng-template #anyRating>dowolna</ng-template>
+              </span>
+            </div>
+            <input type="range"
+                   min="0" max="5" step="0.5"
+                   [ngModel]="minRating"
+                   (ngModelChange)="onMinRatingChange($event)"
+                   class="rating-slider w-full">
+            <div class="flex justify-between text-[10px] text-gray-400 mt-1 px-0.5 select-none">
+              <span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+            </div>
+          </div>
+
+          <label class="flex items-center justify-between gap-3 cursor-pointer p-2 rounded-xl hover:bg-white/40 transition-colors">
+            <span class="flex items-center gap-2 text-sm text-gray-700">
+              <span class="w-6 h-6 rounded-full bg-yellow-200 flex items-center justify-center shadow-sm" style="color:#f59e0b">★</span>
+              Tylko ocenione miejsca
+            </span>
+            <span class="relative inline-flex items-center">
+              <input type="checkbox"
+                     [checked]="onlyRated"
+                     (change)="toggleOnlyRated()"
+                     class="sr-only peer">
+              <span class="w-9 h-5 bg-gray-300 rounded-full peer-checked:bg-green-500 transition-colors"></span>
+              <span class="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"></span>
+            </span>
+          </label>
+
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="text-xs font-semibold text-gray-700 uppercase tracking-wide">Limit pinezek</label>
+              <span *ngIf="limit !== null"
+                    class="text-[11px] font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
+                top {{ limit }}
+              </span>
+            </div>
+            <div class="flex flex-wrap gap-1.5">
+              <button *ngFor="let opt of limitOptions"
+                      type="button"
+                      (click)="selectLimit(opt.value)"
+                      class="px-2.5 py-1 text-xs font-medium rounded-full transition-colors border"
+                      [ngClass]="limit === opt.value
+                        ? 'bg-green-600 text-white border-green-600 shadow-sm'
+                        : 'bg-white/60 text-gray-700 border-gray-200 hover:bg-white'">
+                {{ opt.label }}
+              </button>
+            </div>
+          </div>
+
+          <button *ngIf="isRatingFilterActive"
+                  type="button"
+                  (click)="resetFilters()"
+                  class="w-full text-xs text-gray-600 hover:text-gray-900 hover:bg-white/50 transition-colors py-1.5 rounded-lg">
+            Wyczyść filtry
+          </button>
+        </div>
       </div>
 
     </div>
@@ -113,6 +191,31 @@
         <button class="w-14 h-14 rounded-full bg-purple-400 flex items-center justify-center text-white text-2xl shadow-xl hover:bg-purple-500 transition-colors"></button>
         <a routerLink="/profile" class="w-14 h-14 rounded-full bg-green-700 border-4 border-white shadow-xl flex items-center justify-center text-white font-bold text-xl ml-1 hover:bg-green-800 transition-colors cursor-pointer">{{ userInitials }}</a>
       </div>
+    </div>
+
+    <!-- Zoom controls -->
+    <div class="absolute bottom-8 right-4 flex flex-col gap-2 pointer-events-auto z-[800]">
+      <button (click)="zoomIn()"
+              class="w-12 h-12 rounded-2xl bg-white/70 backdrop-blur-md shadow-xl border border-white/30 flex items-center justify-center text-gray-700 hover:bg-white hover:text-green-700 hover:shadow-2xl active:scale-95 transition-all duration-150 text-xl font-bold select-none"
+              title="Przybliż">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+        </svg>
+      </button>
+      <button (click)="zoomOut()"
+              class="w-12 h-12 rounded-2xl bg-white/70 backdrop-blur-md shadow-xl border border-white/30 flex items-center justify-center text-gray-700 hover:bg-white hover:text-green-700 hover:shadow-2xl active:scale-95 transition-all duration-150 text-xl font-bold select-none"
+              title="Oddal">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 12h16" />
+        </svg>
+      </button>
+      <button (click)="resetView()"
+              class="w-12 h-12 rounded-2xl bg-white/70 backdrop-blur-md shadow-xl border border-white/30 flex items-center justify-center text-gray-700 hover:bg-white hover:text-green-700 hover:shadow-2xl active:scale-95 transition-all duration-150 select-none"
+              title="Wróć do widoku startowego">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.364 2.636M3 3v6h6" />
+        </svg>
+      </button>
     </div>
 
     <!-- Add-place mode banner -->

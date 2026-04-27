@@ -1,7 +1,16 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
+
+export type PlaceSortOption = 'RECENT' | 'HIGHEST_RATED' | 'LOWEST_RATED';
+
+export interface PlaceQueryOptions {
+  sort?: PlaceSortOption;
+  minRating?: number;
+  onlyRated?: boolean;
+  limit?: number | null;
+}
 
 export interface PlacePin {
   id: number;
@@ -35,8 +44,21 @@ export class PlaceService {
 
   constructor(private readonly http: HttpClient) {}
 
-  getAll(): Observable<PlacePin[]> {
-    return this.http.get<PlacePin[]>(this.url);
+  getAll(options: PlaceQueryOptions = {}): Observable<PlacePin[]> {
+    let params = new HttpParams();
+    if (options.sort) {
+      params = params.set('sort', options.sort);
+    }
+    if (options.minRating != null && options.minRating > 0) {
+      params = params.set('minRating', options.minRating.toString());
+    }
+    if (options.onlyRated) {
+      params = params.set('onlyRated', 'true');
+    }
+    if (options.limit != null && options.limit > 0) {
+      params = params.set('limit', options.limit.toString());
+    }
+    return this.http.get<PlacePin[]>(this.url, { params });
   }
 
   search(query: string): Observable<PlacePin[]> {

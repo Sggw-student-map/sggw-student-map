@@ -1,12 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { FriendService, FriendshipResponse, UserSummary } from '../core/friend.service';
 
 @Component({
   selector: 'app-friends',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './friends.component.html',
   styleUrl: './friends.component.css'
 })
@@ -22,7 +22,7 @@ export class FriendsComponent implements OnInit {
   loading = false;
   message = '';
 
-  constructor(private friendService: FriendService, private router: Router) {}
+  constructor(private friendService: FriendService) {}
 
   ngOnInit(): void {
     this.loadAll();
@@ -92,9 +92,5 @@ export class FriendsComponent implements OnInit {
   setTab(tab: 'friends' | 'received' | 'sent' | 'invite'): void {
     this.activeTab = tab;
     this.message = '';
-  }
-
-  goToMainPage(): void {
-    this.router.navigate(['/map']);
   }
 }
