@@ -3,10 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import * as L from 'leaflet';
 import { PlacePin, PlaceService, CreatePlaceRequest, NavigationResponse, PlaceSortOption } from '../core/place.service';
-import { UserStateService } from '../core/user-state.service';
-import { CurrentUser } from '../core/auth.service';
 import { RouterModule } from '@angular/router';
 import { Subject, of, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
+import { NavbarComponent } from '../shared/navbar/navbar.component';
 
 interface SortOptionConfig {
   id: PlaceSortOption;
@@ -20,7 +19,7 @@ const HIGHLIGHT_RATING_THRESHOLD = 4.5;
 @Component({
   selector: 'app-map',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, NavbarComponent],
   templateUrl: './map.html',
   styleUrl: './map.css',
 })
@@ -33,25 +32,16 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
 
   searchQuery = '';
   searchResults: PlacePin[] = [];
-  showSearchResults = false;
+  suggestedPlaces: PlacePin[] = [];
+  searchFocused = false;
+  searchLoading = false;
+  private blurTimeoutId: number | undefined;
 
   addPlaceMode = false;
   showPlaceForm = false;
   newPlace: CreatePlaceRequest = { name: '', latitude: 0, longitude: 0, description: '' };
   private tempMarker?: L.Marker;
   formError = '';
-
-  currentUser: CurrentUser | null = null;
-  userInitials = '?';
-  userDisplayName = 'Użytkownik';
-
-  menuItems = [
-    { name: 'Feed', color: 'bg-sky-200 text-sky-700',route: '/feed'  },
-    { name: 'Wydarzenia', color: 'bg-green-200 text-green-700', route: '/events'  },
-    { name: 'Opinie', color: 'bg-pink-200 text-pink-700', route: '/opinions' },
-    { name: 'Znajomi', color: 'bg-orange-200 text-orange-700', route: '/friends' }
-    // { name: 'Powiadomienia', color: 'bg-yellow-200 text-yellow-700', route: '/notifications' }
-  ];
 
   readonly sortOptions: SortOptionConfig[] = [
     { id: 'RECENT', label: 'Ostatnie', description: 'Najnowsze pinezki', dotClass: 'bg-cyan-200' },
@@ -80,30 +70,23 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
   private reloadSubject = new Subject<void>();
 
   constructor(
-    private readonly placeService: PlaceService,
-    private readonly userState: UserStateService
+    private readonly placeService: PlaceService
   ) {}
 
   ngOnInit(): void {
-    this.userState.loadUser().subscribe();
-    this.userState.user$.subscribe((user: CurrentUser | null) => {
-      this.currentUser = user;
-      this.userInitials = this.userState.getInitials(user);
-      this.userDisplayName = this.userState.getDisplayName(user);
-    });
-
     this.searchSubject.pipe(
       debounceTime(300),
       distinctUntilChanged(),
       switchMap(query => {
         if (!query.trim()) {
-          return of([]);
+          this.searchLoading = false;
+          return of([] as PlacePin[]);
         }
         return this.placeService.search(query);
       })
     ).subscribe(results => {
       this.searchResults = results;
-      this.showSearchResults = results.length > 0;
+      this.searchLoading = false;
     });
 
     this.reloadSubject.pipe(debounceTime(150)).subscribe(() => this.loadPins());
@@ -124,9 +107,13 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
     });
     this.initMap();
     this.loadPins();
+    this.loadSuggestedPlaces();
   }
 
   ngOnDestroy(): void {
+    if (this.blurTimeoutId !== undefined) {
+      window.clearTimeout(this.blurTimeoutId);
+    }
     if (this.map) {
       this.map.off('popupopen', this.popupOpenHandler);
       this.map.remove();
@@ -202,28 +189,84 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onSearchInput(): void {
-    this.searchSubject.next(this.searchQuery);
-    if (!this.searchQuery.trim()) {
+    if (this.searchQuery.trim()) {
+      this.searchLoading = true;
+    } else {
       this.searchResults = [];
-      this.showSearchResults = false;
+      this.searchLoading = false;
     }
+    this.searchSubject.next(this.searchQuery);
+  }
+
+  onSearchFocus(): void {
+    if (this.blurTimeoutId !== undefined) {
+      window.clearTimeout(this.blurTimeoutId);
+      this.blurTimeoutId = undefined;
+    }
+    this.searchFocused = true;
+    if (!this.searchQuery.trim() && this.suggestedPlaces.length === 0) {
+      this.loadSuggestedPlaces();
+    }
+  }
+
+  onSearchBlur(): void {
+    if (this.blurTimeoutId !== undefined) {
+      window.clearTimeout(this.blurTimeoutId);
+    }
+    this.blurTimeoutId = window.setTimeout(() => {
+      this.searchFocused = false;
+      this.blurTimeoutId = undefined;
+    }, 180);
   }
 
   selectSearchResult(place: PlacePin): void {
     this.searchQuery = place.name;
     this.searchResults = [];
-    this.showSearchResults = false;
+    this.searchFocused = false;
 
     const marker = this.markerMap[place.id];
     if (marker) {
+      this.map.flyTo([place.latitude, place.longitude], Math.max(this.map.getZoom(), 17), {
+        duration: 0.6,
+      });
       marker.openPopup();
     }
   }
 
-  hideSearchResults(): void {
-    setTimeout(() => {
-      this.showSearchResults = false;
-    }, 200);
+  clearSearch(): void {
+    this.searchQuery = '';
+    this.searchResults = [];
+    this.searchLoading = false;
+    this.searchSubject.next('');
+  }
+
+  get hasSearchQuery(): boolean {
+    return this.searchQuery.trim().length > 0;
+  }
+
+  get searchDropdownItems(): PlacePin[] {
+    return this.hasSearchQuery ? this.searchResults : this.suggestedPlaces;
+  }
+
+  get isSearchDropdownOpen(): boolean {
+    if (!this.searchFocused) {
+      return false;
+    }
+    if (this.hasSearchQuery) {
+      return true;
+    }
+    return this.suggestedPlaces.length > 0;
+  }
+
+  private loadSuggestedPlaces(): void {
+    this.placeService.getAll({ sort: 'HIGHEST_RATED', limit: 6 }).subscribe({
+      next: (places: PlacePin[]) => {
+        this.suggestedPlaces = places;
+      },
+      error: () => {
+        this.suggestedPlaces = [];
+      },
+    });
   }
 
   selectSort(option: PlaceSortOption): void {

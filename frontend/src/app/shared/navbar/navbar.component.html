@@ -1,0 +1,96 @@
+<header class="app-navbar pointer-events-auto">
+  <div class="navbar-shell">
+
+    <a routerLink="/map" class="navbar-brand" aria-label="Mapa SGGW">
+      <span class="navbar-brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+          <circle cx="12" cy="9" r="2.5"/>
+        </svg>
+      </span>
+      <span class="navbar-brand-text">
+        <span class="navbar-brand-title">SGGW Map</span>
+        <span class="navbar-brand-sub">Mapa studentów</span>
+      </span>
+    </a>
+
+    <nav class="navbar-menu" aria-label="Główna nawigacja">
+      <a *ngFor="let item of menuItems"
+         [routerLink]="item.route"
+         routerLinkActive="is-active"
+         [routerLinkActiveOptions]="{ exact: false }"
+         class="navbar-link">
+        <span class="navbar-link-dot {{ item.dotClass }}"></span>
+        <span class="navbar-link-label">{{ item.name }}</span>
+      </a>
+    </nav>
+
+    <div class="navbar-search">
+      <ng-content select="[navbarSearch]"></ng-content>
+    </div>
+
+    <div class="navbar-actions">
+      <ng-content select="[navbarActions]"></ng-content>
+    </div>
+
+    <div class="navbar-user">
+      <button type="button"
+              class="navbar-user-trigger"
+              [class.is-open]="userMenuOpen"
+              (click)="toggleUserMenu()"
+              [attr.aria-expanded]="userMenuOpen"
+              aria-haspopup="menu">
+        <span class="navbar-user-avatar">{{ userInitials }}</span>
+        <span class="navbar-user-meta">
+          <span class="navbar-user-name">{{ userDisplayName }}</span>
+          <span class="navbar-user-greeting">Witaj ponownie!</span>
+        </span>
+        <svg class="navbar-user-chevron"
+             [class.is-open]="userMenuOpen"
+             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+
+      <div *ngIf="userMenuOpen" class="navbar-user-menu" role="menu">
+        <div class="navbar-user-card">
+          <span class="navbar-user-avatar lg">{{ userInitials }}</span>
+          <span class="navbar-user-card-meta">
+            <span class="navbar-user-card-name">{{ userDisplayName }}</span>
+            <span class="navbar-user-card-sub" *ngIf="currentUser?.username">{{ '@' + currentUser?.username }}</span>
+          </span>
+        </div>
+
+        <a routerLink="/profile" (click)="closeUserMenu()" class="navbar-user-item" role="menuitem">
+          <span class="navbar-user-item-dot bg-rose-300"></span>
+          <span class="navbar-user-item-label">Profil</span>
+          <svg class="navbar-user-item-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </a>
+        <a routerLink="/settings" (click)="closeUserMenu()" class="navbar-user-item" role="menuitem">
+          <span class="navbar-user-item-dot bg-slate-300"></span>
+          <span class="navbar-user-item-label">Ustawienia</span>
+          <svg class="navbar-user-item-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </a>
+
+        <div class="navbar-user-divider"></div>
+
+        <button type="button" (click)="logout()" class="navbar-user-item navbar-user-item--danger" role="menuitem">
+          <span class="navbar-user-item-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+          </span>
+          <span class="navbar-user-item-label">Wyloguj się</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</header>
