@@ -43,6 +43,16 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
   private tempMarker?: L.Marker;
   formError = '';
 
+  deletePlaceMode = false;
+  placeToDelete: PlacePin | null = null;
+  deleteError = '';
+  deleting = false;
+
+  locating = false;
+  locateError = '';
+  private userLocationMarker?: L.Marker;
+  private userLocationAccuracyCircle?: L.Circle;
+
   readonly sortOptions: SortOptionConfig[] = [
     { id: 'RECENT', label: 'Ostatnie', description: 'Najnowsze pinezki', dotClass: 'bg-cyan-200' },
     { id: 'HIGHEST_RATED', label: 'Najwyżej oceniane', description: 'Posortuj wg średniej oceny', dotClass: 'bg-pink-200' },
@@ -116,6 +126,12 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
     }
     if (this.map) {
       this.map.off('popupopen', this.popupOpenHandler);
+      if (this.userLocationMarker) {
+        this.map.removeLayer(this.userLocationMarker);
+      }
+      if (this.userLocationAccuracyCircle) {
+        this.map.removeLayer(this.userLocationAccuracyCircle);
+      }
       this.map.remove();
     }
   }
@@ -134,12 +150,125 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
 
   toggleAddPlaceMode(): void {
     this.addPlaceMode = !this.addPlaceMode;
-    if (!this.addPlaceMode) {
+    if (this.addPlaceMode) {
+      this.exitDeleteMode();
+    } else {
       this.cancelPlaceForm();
     }
   }
 
+  toggleDeleteMode(): void {
+    this.deletePlaceMode = !this.deletePlaceMode;
+    if (this.deletePlaceMode) {
+      this.addPlaceMode = false;
+      this.cancelPlaceForm();
+      this.deleteError = '';
+    } else {
+      this.placeToDelete = null;
+      this.deleteError = '';
+    }
+  }
+
+  private exitDeleteMode(): void {
+    this.deletePlaceMode = false;
+    this.placeToDelete = null;
+    this.deleteError = '';
+  }
+
+  cancelDelete(): void {
+    this.placeToDelete = null;
+    this.deleteError = '';
+  }
+
+  confirmDelete(): void {
+    if (!this.placeToDelete || this.deleting) {
+      return;
+    }
+    const id = this.placeToDelete.id;
+    this.deleting = true;
+    this.deleteError = '';
+    this.placeService.delete(id).subscribe({
+      next: () => {
+        this.deleting = false;
+        this.placeToDelete = null;
+        this.deletePlaceMode = false;
+        this.loadPins();
+      },
+      error: () => {
+        this.deleting = false;
+        this.deleteError = 'Nie udało się usunąć miejsca. Zaloguj się i spróbuj ponownie.';
+      },
+    });
+  }
+
+  locateMe(): void {
+    if (this.locating) {
+      return;
+    }
+    if (!('geolocation' in navigator)) {
+      this.locateError = 'Twoja przeglądarka nie obsługuje geolokalizacji.';
+      window.setTimeout(() => (this.locateError = ''), 3500);
+      return;
+    }
+    this.locating = true;
+    this.locateError = '';
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        this.locating = false;
+        const { latitude, longitude, accuracy } = pos.coords;
+        this.placeUserLocationMarker(latitude, longitude, accuracy);
+        this.map.flyTo([latitude, longitude], Math.max(this.map.getZoom(), 17), {
+          duration: 0.7,
+        });
+      },
+      (err) => {
+        this.locating = false;
+        this.locateError = err.code === err.PERMISSION_DENIED
+          ? 'Brak zgody na dostęp do lokalizacji.'
+          : 'Nie udało się ustalić lokalizacji.';
+        window.setTimeout(() => (this.locateError = ''), 3500);
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 30_000 }
+    );
+  }
+
+  private placeUserLocationMarker(lat: number, lng: number, accuracy: number): void {
+    if (this.userLocationMarker) {
+      this.map.removeLayer(this.userLocationMarker);
+    }
+    if (this.userLocationAccuracyCircle) {
+      this.map.removeLayer(this.userLocationAccuracyCircle);
+    }
+
+    const userIcon = L.divIcon({
+      className: 'user-location-icon',
+      html: '<span class="user-location-pulse"></span><span class="user-location-dot"></span>',
+      iconSize: [22, 22],
+      iconAnchor: [11, 11],
+    });
+
+    this.userLocationAccuracyCircle = L.circle([lat, lng], {
+      radius: Math.min(accuracy, 200),
+      color: '#a855f7',
+      weight: 1,
+      fillColor: '#a855f7',
+      fillOpacity: 0.12,
+      interactive: false,
+    }).addTo(this.map);
+
+    this.userLocationMarker = L.marker([lat, lng], {
+      icon: userIcon,
+      interactive: false,
+      keyboard: false,
+    }).addTo(this.map);
+  }
+
   onMapClick(e: L.LeafletMouseEvent): void {
+    if (this.deletePlaceMode) {
+      this.placeToDelete = null;
+      this.deleteError = '';
+      return;
+    }
     if (!this.addPlaceMode) return;
 
     this.removeTempMarker();
@@ -440,10 +569,24 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
             .addTo(this.markerLayer);
 
           marker.on('mouseover', () => {
+            if (this.deletePlaceMode) {
+              return;
+            }
             clearCloseTimers();
             marker.openPopup();
           });
           marker.on('mouseout', () => scheduleClose());
+
+          marker.on('click', (event: L.LeafletMouseEvent) => {
+            if (!this.deletePlaceMode) {
+              return;
+            }
+            L.DomEvent.stopPropagation(event);
+            clearCloseTimers();
+            marker.closePopup();
+            this.placeToDelete = pin;
+            this.deleteError = '';
+          });
 
           marker.on('popupopen', (e: L.PopupEvent) => {
             const popupElement = e.popup.getElement();

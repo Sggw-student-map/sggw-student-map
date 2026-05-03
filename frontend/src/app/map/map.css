@@ -6,6 +6,22 @@
   cursor: crosshair !important;
 }
 
+.cursor-delete,
+.cursor-delete .leaflet-grab {
+  cursor: not-allowed !important;
+}
+
+:host ::ng-deep .cursor-delete .leaflet-marker-icon {
+  cursor: pointer !important;
+  filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.55));
+  transition: filter 160ms ease, transform 160ms ease;
+}
+
+:host ::ng-deep .cursor-delete .leaflet-marker-icon:hover {
+  filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.85));
+  transform: translateY(-1px) scale(1.04);
+}
+
 :host ::ng-deep .leaflet-popup-content-wrapper {
   border-radius: 14px;
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.22);
@@ -403,6 +419,70 @@
 
 .map-action-btn--purple {
   background: linear-gradient(135deg, #c084fc 0%, #a855f7 100%);
+}
+
+.map-action-btn:disabled {
+  cursor: wait;
+  filter: brightness(0.95);
+  transform: none;
+}
+
+.map-action-btn.is-loading {
+  cursor: wait;
+}
+
+.map-action-spinner {
+  width: 1.05rem;
+  height: 1.05rem;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-top-color: #ffffff;
+  animation: map-search-spin 720ms linear infinite;
+  display: inline-block;
+}
+
+/* ---- User location marker (locate-me) ---- */
+:host ::ng-deep .user-location-icon {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  pointer-events: none;
+}
+
+:host ::ng-deep .user-location-icon .user-location-dot {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #c084fc 0%, #a855f7 100%);
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.45), 0 4px 10px rgba(168, 85, 247, 0.45);
+}
+
+:host ::ng-deep .user-location-icon .user-location-pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: rgba(168, 85, 247, 0.4);
+  animation: user-location-pulse 1.6s ease-out infinite;
+  transform-origin: center;
+}
+
+@keyframes user-location-pulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.7;
+  }
+  80% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
 }
 
 /* ---- Custom scrollbar for filter panel ---- */

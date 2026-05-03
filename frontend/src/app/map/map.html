@@ -1,7 +1,8 @@
 <div class="relative w-full h-screen overflow-hidden">
 
   <div id="map" class="absolute inset-0 h-full w-full"
-       [class.cursor-crosshair]="addPlaceMode"></div>
+       [class.cursor-crosshair]="addPlaceMode"
+       [class.cursor-delete]="deletePlaceMode"></div>
 
   <div class="absolute inset-0 pointer-events-none">
 
@@ -105,8 +106,36 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
-          <button class="map-action-btn map-action-btn--cyan" title="Wkrótce"></button>
-          <button class="map-action-btn map-action-btn--purple" title="Wkrótce"></button>
+          <button (click)="toggleDeleteMode()"
+                  class="map-action-btn"
+                  [class.map-action-btn--cyan]="!deletePlaceMode"
+                  [class.map-action-btn--danger]="deletePlaceMode"
+                  [title]="deletePlaceMode ? 'Anuluj usuwanie' : 'Usuń miejsce'">
+            <svg *ngIf="!deletePlaceMode" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+              <path d="M10 11v6"></path>
+              <path d="M14 11v6"></path>
+              <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            <svg *ngIf="deletePlaceMode" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <button (click)="locateMe()"
+                  class="map-action-btn map-action-btn--purple"
+                  [class.is-loading]="locating"
+                  [disabled]="locating"
+                  title="Pokaż moją lokalizację">
+            <span *ngIf="locating" class="map-action-spinner" aria-hidden="true"></span>
+            <svg *ngIf="!locating" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M12 2v3"></path>
+              <path d="M12 19v3"></path>
+              <path d="M2 12h3"></path>
+              <path d="M19 12h3"></path>
+            </svg>
+          </button>
         </div>
 
       </app-navbar>
@@ -245,6 +274,60 @@
       <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-2xl border border-white/30 px-8 py-4 text-center">
         <p class="text-gray-800 font-semibold text-lg">Kliknij na mapę, aby dodać nowe miejsce</p>
         <p class="text-gray-500 text-sm mt-1">Pinezka pojawi się w wybranym punkcie</p>
+      </div>
+    </div>
+
+    <!-- Delete-place mode banner -->
+    <div *ngIf="deletePlaceMode && !placeToDelete"
+         class="absolute bottom-8 left-1/2 -translate-x-1/2 pointer-events-auto z-[800]">
+      <div class="bg-white/85 backdrop-blur-md rounded-2xl shadow-2xl border border-red-200/70 px-8 py-4 text-center">
+        <p class="text-red-700 font-semibold text-lg">Kliknij na pinezkę, aby ją usunąć</p>
+        <p class="text-gray-500 text-sm mt-1">Operacja będzie wymagała potwierdzenia</p>
+      </div>
+    </div>
+
+    <!-- Delete confirmation dialog -->
+    <div *ngIf="placeToDelete"
+         class="absolute bottom-8 left-1/2 -translate-x-1/2 pointer-events-auto w-full max-w-md px-4 z-[800]">
+      <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-red-200/60 p-6">
+        <div class="flex items-start gap-3 mb-4">
+          <span class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+          </span>
+          <div class="min-w-0">
+            <h3 class="text-lg font-bold text-gray-900 leading-tight">Usunąć miejsce?</h3>
+            <p class="text-sm text-gray-600 mt-0.5">
+              <span class="font-semibold text-gray-900">{{ placeToDelete.name }}</span> oraz wszystkie powiązane oceny zostaną trwale usunięte.
+            </p>
+          </div>
+        </div>
+
+        <div *ngIf="deleteError" class="text-red-600 text-sm font-medium mb-3">{{ deleteError }}</div>
+
+        <div class="flex gap-3">
+          <button (click)="cancelDelete()"
+                  [disabled]="deleting"
+                  class="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors disabled:opacity-60">
+            Anuluj
+          </button>
+          <button (click)="confirmDelete()"
+                  [disabled]="deleting"
+                  class="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors shadow-lg disabled:opacity-60 disabled:cursor-not-allowed">
+            {{ deleting ? 'Usuwanie...' : 'Usuń' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Locate-me error toast -->
+    <div *ngIf="locateError"
+         class="absolute top-24 left-1/2 -translate-x-1/2 pointer-events-auto z-[850]">
+      <div class="bg-white/90 backdrop-blur-md rounded-2xl shadow-xl border border-red-200/60 px-5 py-2.5 text-sm text-red-700 font-medium">
+        {{ locateError }}
       </div>
     </div>
 
