@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { ReviewsService } from './reviews.service';
 import { Review } from './review.model';
@@ -39,18 +39,30 @@ export class OpinionsPageComponent implements OnInit {
   modalComment = '';
   modalPlaceId: number | null = null;
   hovered = 0;
+  myReviewsMode = false;
 
   places: Place[] = [];
 
-  constructor(private reviewsService: ReviewsService, private http: HttpClient) {}
+  constructor(
+    private reviewsService: ReviewsService,
+    private http: HttpClient,
+    private route: ActivatedRoute
+  ) {}
 
   ngOnInit(): void {
-    this.loadReviews();
+    this.route.queryParamMap.subscribe(params => {
+      this.myReviewsMode = params.get('mine') === 'true';
+      this.loadReviews();
+    });
     this.loadPlaces();
   }
 
   loadReviews(): void {
-    this.reviewsService.getAllReviews().subscribe((data: Review[]) => {
+    const source$ = this.myReviewsMode
+      ? this.reviewsService.getMyReviews()
+      : this.reviewsService.getAllReviews();
+
+    source$.subscribe((data: Review[]) => {
       this.reviews = data.map(r => {
         const authorName = r.author || 'Anonim';
         const initials = authorName.substring(0, 2).toUpperCase();

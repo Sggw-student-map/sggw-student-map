@@ -20,6 +20,11 @@ public class ReviewController {
         return ResponseEntity.ok(reviewService.getAllReviews());
     }
 
+    @GetMapping("/reviews/my")
+    public ResponseEntity<List<Review>> getMyReviews() {
+        return ResponseEntity.ok(reviewService.getMyReviews());
+    }
+
     @GetMapping("/places/{placeId}/reviews")
     public ResponseEntity<List<Review>> getReviewsByPlace(@PathVariable Integer placeId) {
         return ResponseEntity.ok(reviewService.getReviewsByPlace(placeId));

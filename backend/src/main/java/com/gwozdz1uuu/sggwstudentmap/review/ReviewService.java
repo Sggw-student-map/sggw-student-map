@@ -22,6 +22,16 @@ public class ReviewService {
         return reviews;
     }
 
+    public List<Review> getMyReviews() {
+        User currentUser = authService.getCurrentUser();
+        if (currentUser == null) {
+            throw new org.springframework.security.access.AccessDeniedException("User must be authenticated");
+        }
+        List<Review> reviews = reviewRepository.findByUserId(currentUser.getId());
+        populateAuthors(reviews);
+        return reviews;
+    }
+
     public List<Review> getReviewsByPlace(Integer placeId) {
         List<Review> reviews = reviewRepository.findByPlaceId(placeId);
         populateAuthors(reviews);

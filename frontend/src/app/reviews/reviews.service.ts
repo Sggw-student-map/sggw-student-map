@@ -14,8 +14,12 @@ export class ReviewsService {
   }
 
   getAllReviews(): Observable<any[]> {
-  return this.http.get<any[]>(`${this.apiUrl}/reviews`);
-}
+    return this.http.get<any[]>(`${this.apiUrl}/reviews`);
+  }
+
+  getMyReviews(): Observable<Review[]> {
+    return this.http.get<Review[]>(`${this.apiUrl}/reviews/my`);
+  }
 
   addReview(review: Review): Observable<Review> {
     return this.http.post<Review>(
