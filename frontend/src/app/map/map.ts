@@ -1,11 +1,11 @@
 import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import * as L from 'leaflet';
 import { PlacePin, PlaceService, CreatePlaceRequest, NavigationResponse, PlaceSortOption } from '../core/place.service';
 import { EventService, EventResponse } from '../core/event.service';
-import { RouterModule } from '@angular/router';
+import { UserStateService } from '../core/user-state.service';
 import { Subject, of, debounceTime, distinctUntilChanged, switchMap, forkJoin, catchError } from 'rxjs';
 import { NavbarComponent } from '../shared/navbar/navbar.component';
 
@@ -86,7 +86,7 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
   constructor(
     private readonly placeService: PlaceService,
     private readonly userState: UserStateService,
-    private readonly router: Router
+    private readonly router: Router,
     private readonly eventService: EventService
   ) {}
 
@@ -811,35 +811,38 @@ private deletePin(placeId: number): void {
       const container = e.popup.getElement();
       if (!container) return;
 
-      const btn = container.querySelector('.nav-to-gmaps-btn') as HTMLElement | null;
-      if (!btn) return;
-
-      const placeId = Number(btn.getAttribute('data-place-id'));
-      if (!placeId) return;
+      const navBtn = container.querySelector('.nav-to-gmaps-btn') as HTMLElement | null;
+      if (navBtn) {
+        const placeId = Number(navBtn.getAttribute('data-place-id'));
+        if (placeId) {
+          navBtn.addEventListener('click', (ev: Event) => {
+            ev.stopPropagation();
+            this.handleNavigationClick(placeId);
+          });
+        }
+      }
 
       const addPostBtn = container.querySelector('.add-post-btn') as HTMLElement | null;
-  if (addPostBtn) {
-    const placeId = Number(addPostBtn.getAttribute('data-place-id'));
-    addPostBtn.addEventListener('click', (ev: Event) => {
-      ev.stopPropagation();
-      this.goToFeedAndCreatePost(placeId);
-    });
-  }
+      if (addPostBtn) {
+        const placeId = Number(addPostBtn.getAttribute('data-place-id'));
+        if (placeId) {
+          addPostBtn.addEventListener('click', (ev: Event) => {
+            ev.stopPropagation();
+            this.goToFeedAndCreatePost(placeId);
+          });
+        }
+      }
 
-  // Obsługa usuwania pinezki
-  const deleteBtn = container.querySelector('.delete-pin-btn') as HTMLElement | null;
-  if (deleteBtn) {
-    const placeId = Number(deleteBtn.getAttribute('data-place-id'));
-    deleteBtn.addEventListener('click', (ev: Event) => {
-      ev.stopPropagation();
-      this.deletePin(placeId);
-    });
-  }
-
-      btn.addEventListener('click', (ev: Event) => {
-        ev.stopPropagation();
-        this.handleNavigationClick(placeId);
-      });
+      const deleteBtn = container.querySelector('.delete-pin-btn') as HTMLElement | null;
+      if (deleteBtn) {
+        const placeId = Number(deleteBtn.getAttribute('data-place-id'));
+        if (placeId) {
+          deleteBtn.addEventListener('click', (ev: Event) => {
+            ev.stopPropagation();
+            this.deletePin(placeId);
+          });
+        }
+      }
     };
     this.map.on('popupopen', this.popupOpenHandler);
   }
