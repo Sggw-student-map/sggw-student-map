@@ -194,6 +194,7 @@ public class FeedService {
         long comments = p.getCommentsCount() == null ? 0 : p.getCommentsCount();
         boolean liked = Boolean.TRUE.equals(p.getLikedByMe());
         boolean authored = viewerId != null && viewerId > 0 && viewerId.equals(p.getAuthorId());
+        boolean authorPrivate = Boolean.TRUE.equals(p.getAuthorPrivateAccount());
 
         return new FeedPostResponse(
                 p.getId(),
@@ -205,7 +206,8 @@ public class FeedService {
                 likes,
                 comments,
                 liked,
-                authored
+                authored,
+                authorPrivate
         );
     }
 

@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { switchMap } from 'rxjs/operators';
 import { AuthService } from '../core/auth.service';
 import { UserStateService } from '../core/user-state.service';
@@ -19,6 +18,7 @@ export class Login {
 
   constructor(
     private readonly router: Router,
+    private readonly route: ActivatedRoute,
     private readonly authService: AuthService,
     private readonly userState: UserStateService
   ) {}
@@ -38,7 +38,8 @@ export class Login {
       .subscribe({
         next: () => {
           this.isLoading = false;
-          this.router.navigate(['/map']);
+          const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+          this.router.navigateByUrl(returnUrl && returnUrl.startsWith('/') ? returnUrl : '/map');
         },
         error: () => {
           this.isLoading = false;

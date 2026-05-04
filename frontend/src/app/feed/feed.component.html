@@ -25,8 +25,16 @@
           {{ post.initials }}
         </div>
         <div class="user-meta">
-          <span class="username">{{ post.authorName }}</span>
-          <span class="time">{{ post.timeAgo }}</span>
+          <div class="name-row">
+            <span class="username">{{ post.authorName }}</span>
+            <span class="time">{{ post.timeAgo }}</span>
+            <span *ngIf="post.authorPrivateAccount"
+                  class="visibility-badge"
+                  title="Autor ma prywatne konto — ten post widzą tylko znajomi.">
+              <span class="visibility-badge-icon" aria-hidden="true">👥</span>
+              Tylko znajomi
+            </span>
+          </div>
           <div><span class="place-chip">📍 {{ post.placeName }}</span></div>
         </div>
         <button *ngIf="post.authoredByMe" class="delete-btn" title="Usuń post" (click)="deletePost(post)">✕</button>
