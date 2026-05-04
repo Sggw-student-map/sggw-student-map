@@ -1,12 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { FriendService, FriendshipResponse, UserSummary } from '../core/friend.service';
 
 @Component({
   selector: 'app-friends',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './friends.component.html',
   styleUrl: './friends.component.css'
 })
@@ -18,9 +19,20 @@ export class FriendsComponent implements OnInit {
   pendingReceived: FriendshipResponse[] = [];
   pendingSent: FriendshipResponse[] = [];
   invitableUsers: UserSummary[] = [];
+  searchQuery = '';
 
   loading = false;
   message = '';
+
+  get filteredInvitableUsers(): UserSummary[] {
+    const q = this.searchQuery.trim().toLowerCase();
+    if (!q) return this.invitableUsers;
+    return this.invitableUsers.filter(u =>
+      u.username.toLowerCase().includes(q) ||
+      u.firstName.toLowerCase().includes(q) ||
+      u.lastName.toLowerCase().includes(q)
+    );
+  }
 
   constructor(private friendService: FriendService) {}
 
@@ -92,5 +104,6 @@ export class FriendsComponent implements OnInit {
   setTab(tab: 'friends' | 'received' | 'sent' | 'invite'): void {
     this.activeTab = tab;
     this.message = '';
+    this.searchQuery = '';
   }
 }

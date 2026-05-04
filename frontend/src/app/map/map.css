@@ -441,6 +441,92 @@
   display: inline-block;
 }
 
+/* ---- Legenda mapy (badge wydarzenia) ---- */
+.map-legend-badge {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 5px rgba(220, 38, 38, 0.45);
+  flex-shrink: 0;
+}
+
+/* ---- Pinezka z aktywnym wydarzeniem ---- */
+:host ::ng-deep .pin-with-event {
+  position: relative;
+  background: transparent !important;
+  border: none !important;
+  pointer-events: auto;
+}
+
+:host ::ng-deep .pin-with-event img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: auto;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
+  transition: transform 160ms ease, filter 160ms ease;
+}
+
+:host ::ng-deep .pin-with-event:hover img {
+  transform: translateY(-1px) scale(1.04);
+  filter: drop-shadow(0 4px 6px rgba(220, 38, 38, 0.35));
+}
+
+:host ::ng-deep .pin-event-badge {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  font-family: system-ui, sans-serif;
+  font-weight: 700;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 5px rgba(220, 38, 38, 0.45);
+  pointer-events: none;
+  box-sizing: border-box;
+  animation: pin-event-pulse 2.4s ease-in-out infinite;
+}
+
+/* Gdy w środku jest licznik wydarzeń, badge rośnie i staje się "pigułką", żeby tekst się mieścił */
+:host ::ng-deep .pin-event-badge:has(.pin-event-badge-count) {
+  width: auto;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  top: -6px;
+  right: -8px;
+}
+
+:host ::ng-deep .pin-event-badge-count {
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+@keyframes pin-event-pulse {
+  0%, 100% {
+    box-shadow: 0 2px 5px rgba(220, 38, 38, 0.45),
+                0 0 0 0 rgba(220, 38, 38, 0.55);
+  }
+  50% {
+    box-shadow: 0 2px 7px rgba(220, 38, 38, 0.55),
+                0 0 0 6px rgba(220, 38, 38, 0);
+  }
+}
+
 /* ---- User location marker (locate-me) ---- */
 :host ::ng-deep .user-location-icon {
   position: relative;

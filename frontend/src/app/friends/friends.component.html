@@ -104,11 +104,27 @@
     <!-- Invite new friends -->
     <div class="content-card" *ngIf="activeTab === 'invite' && !loading">
       <div class="section-label">Dodaj znajomego</div>
-      <div class="empty-state" *ngIf="invitableUsers.length === 0">
+
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          placeholder="Szukaj po imieniu, nazwisku lub loginie..."
+          class="search-input"
+        />
+        <button class="search-clear" *ngIf="searchQuery" (click)="searchQuery = ''">✕</button>
+      </div>
+
+      <div class="empty-state" *ngIf="filteredInvitableUsers.length === 0 && invitableUsers.length === 0">
         <div class="empty-icon">🎉</div>
         <p>Wszyscy użytkownicy są już Twoimi znajomymi.</p>
       </div>
-      <div class="user-row" *ngFor="let u of invitableUsers">
+      <div class="empty-state" *ngIf="filteredInvitableUsers.length === 0 && invitableUsers.length > 0">
+        <div class="empty-icon">🔍</div>
+        <p>Brak wyników dla "{{ searchQuery }}".</p>
+      </div>
+      <div class="user-row" *ngFor="let u of filteredInvitableUsers">
         <div class="user-info">
           <span class="avatar">{{ u.username[0].toUpperCase() }}</span>
           <div class="user-text">

@@ -3,8 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import * as L from 'leaflet';
 import { PlacePin, PlaceService, CreatePlaceRequest, NavigationResponse, PlaceSortOption } from '../core/place.service';
+import { EventService, EventResponse } from '../core/event.service';
 import { RouterModule } from '@angular/router';
-import { Subject, of, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
+import { Subject, of, debounceTime, distinctUntilChanged, switchMap, forkJoin, catchError } from 'rxjs';
 import { NavbarComponent } from '../shared/navbar/navbar.component';
 
 interface SortOptionConfig {
@@ -15,6 +16,8 @@ interface SortOptionConfig {
 }
 
 const HIGHLIGHT_RATING_THRESHOLD = 4.5;
+// Wydarzenie liczy się jako "aktualne", jeśli jego data jest nie wcześniej niż 24h temu
+const EVENT_PAST_TOLERANCE_MS = 24 * 60 * 60 * 1000;
 
 @Component({
   selector: 'app-map',
@@ -80,7 +83,8 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
   private reloadSubject = new Subject<void>();
 
   constructor(
-    private readonly placeService: PlaceService
+    private readonly placeService: PlaceService,
+    private readonly eventService: EventService
   ) {}
 
   ngOnInit(): void {
@@ -463,7 +467,7 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
            Array(empty).fill(star('empty')).join('');
   }
 
-  private buildPopupHtml(pin: PlacePin): string {
+  private buildPopupHtml(pin: PlacePin, events: EventResponse[] = []): string {
     const name = this.escapeHtml(pin.name);
     const desc = pin.description ? this.escapeHtml(pin.description) : '';
     const hasRating = pin.averageRating != null;
@@ -474,11 +478,14 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
          </div>`
       : `<div style="font-size:11px;color:#9ca3af;margin-bottom:8px">Brak ocen</div>`;
 
+    const eventsHtml = events.length > 0 ? this.buildEventsBlockHtml(events) : '';
+
     return `
       <div style="min-width:190px;font-family:system-ui,sans-serif">
         <div style="font-weight:700;font-size:14px;margin-bottom:5px">${name}</div>
         ${ratingHtml}
         ${desc ? `<div style="color:#555;font-size:12px;margin-bottom:8px">${desc}</div>` : ''}
+        ${eventsHtml}
         <button
           class="nav-to-gmaps-btn"
           data-place-id="${pin.id}"
@@ -511,14 +518,131 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  /**
+   * Grupuje "aktualne" wydarzenia po miejscu. Wydarzenie liczy się jako aktualne,
+   * jeśli jego `dateOfEvent` jest nie wcześniej niż 24h temu (czyli również takie,
+   * które właśnie trwa lub odbywa się w przyszłości). Wewnątrz każdej grupy
+   * wydarzenia są posortowane chronologicznie.
+   *
+   * Używamy `Record` zamiast `Map<>`, ponieważ nazwa tej klasy (`Map`) przesłania
+   * globalny typ `Map` z ES2015.
+   */
+  private groupCurrentEventsByPlace(events: EventResponse[]): Record<number, EventResponse[]> {
+    const cutoff = Date.now() - EVENT_PAST_TOLERANCE_MS;
+    const grouped: Record<number, EventResponse[]> = {};
+
+    for (const ev of events) {
+      const eventTime = new Date(ev.dateOfEvent).getTime();
+      if (Number.isNaN(eventTime) || eventTime < cutoff) {
+        continue;
+      }
+      const list = grouped[ev.placeId] ?? [];
+      list.push(ev);
+      grouped[ev.placeId] = list;
+    }
+
+    for (const key of Object.keys(grouped)) {
+      grouped[Number(key)].sort(
+        (a, b) => new Date(a.dateOfEvent).getTime() - new Date(b.dateOfEvent).getTime()
+      );
+    }
+    return grouped;
+  }
+
+  /**
+   * Tworzy `L.divIcon` zawierający bazową grafikę pinezki oraz badge informujący,
+   * że w danym miejscu odbywa się wydarzenie. Jeśli jest więcej niż jedno wydarzenie,
+   * w badge'u wyświetlana jest liczba zamiast gwiazdki.
+   */
+  private buildEventBadgeIcon(baseIcon: L.Icon, eventCount: number): L.DivIcon {
+    const opts = baseIcon.options;
+    const iconUrl = opts.iconUrl as string;
+    const [w, h] = (opts.iconSize as L.PointTuple) ?? [25, 41];
+    const badgeContent = eventCount > 1
+      ? `<span class="pin-event-badge-count${eventCount > 9 ? ' pin-event-badge-count-multi' : ''}">${eventCount > 99 ? '99+' : eventCount}</span>`
+      : '';
+
+    return L.divIcon({
+      className: 'pin-with-event',
+      html: `
+        <img src="${iconUrl}" width="${w}" height="${h}" alt="" draggable="false" />
+        <span class="pin-event-badge" title="W tym miejscu odbywa się wydarzenie">
+          ${badgeContent}
+        </span>
+      `,
+      iconSize: opts.iconSize as L.PointTuple,
+      iconAnchor: opts.iconAnchor as L.PointTuple,
+      popupAnchor: opts.popupAnchor as L.PointTuple,
+    });
+  }
+
+  /**
+   * Sekcja popupu z najbliższymi wydarzeniami w danym miejscu (max 3).
+   */
+  private buildEventsBlockHtml(events: EventResponse[]): string {
+    const visible = events.slice(0, 3);
+    const rows = visible.map((ev) => {
+      const name = this.escapeHtml(ev.nameOfEvent ?? 'Wydarzenie');
+      const when = this.formatEventDate(ev.dateOfEvent);
+      return `
+        <div style="display:flex;gap:6px;align-items:flex-start;line-height:1.25">
+          <span style="color:#dc2626;font-size:11px;line-height:1.4">●</span>
+          <div style="min-width:0;flex:1">
+            <div style="font-size:12px;font-weight:600;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
+            <div style="font-size:11px;color:#6b7280">${when}</div>
+          </div>
+        </div>`;
+    }).join('');
+
+    const moreLabel = events.length > visible.length
+      ? `<div style="font-size:11px;color:#9ca3af;margin-top:4px">+ ${events.length - visible.length} więcej</div>`
+      : '';
+
+    return `
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:8px 10px;margin-bottom:10px;display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:#b91c1c;text-transform:uppercase;letter-spacing:0.04em">
+          <span>★</span>
+          <span>Nadchodzące wydarzenia</span>
+        </div>
+        ${rows}
+        ${moreLabel}
+      </div>`;
+  }
+
+  private formatEventDate(dateStr: string): string {
+    const date = new Date(dateStr);
+    if (Number.isNaN(date.getTime())) return '';
+    const now = new Date();
+    const isSameDay = date.toDateString() === now.toDateString();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(now.getDate() + 1);
+    const isTomorrow = date.toDateString() === tomorrow.toDateString();
+
+    const time = date.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+    if (isSameDay) return `Dziś, ${time}`;
+    if (isTomorrow) return `Jutro, ${time}`;
+    const day = date.toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' });
+    return `${day}, ${time}`;
+  }
+
   private loadPins(): void {
-    this.placeService.getAll({
+    const pins$ = this.placeService.getAll({
       sort: this.selectedSort,
       minRating: this.minRating,
       onlyRated: this.onlyRated,
       limit: this.limit,
-    }).subscribe({
-      next: (pins: PlacePin[]) => {
+    });
+
+    // Eventy wymagają zalogowanego użytkownika; w razie błędu (brak auth, sieć) traktujemy jak pustą listę,
+    // żeby pinezki i tak się załadowały.
+    const events$ = this.eventService.getAllEvents().pipe(
+      catchError(() => of([] as EventResponse[]))
+    );
+
+    forkJoin({ pins: pins$, events: events$ }).subscribe({
+      next: ({ pins, events }) => {
+        const eventsByPlace = this.groupCurrentEventsByPlace(events);
+
         this.markerLayer.clearLayers();
         this.markerMap = {};
         this.visibleCount = pins.length;
@@ -528,9 +652,13 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
           this.totalCount = pins.length;
         }
         pins.forEach((pin) => {
-          const icon = pin.averageRating != null && pin.averageRating >= HIGHLIGHT_RATING_THRESHOLD
+          const placeEvents = eventsByPlace[pin.id] ?? [];
+          const baseIcon = pin.averageRating != null && pin.averageRating >= HIGHLIGHT_RATING_THRESHOLD
             ? this.highlightIcon
             : this.blueIcon;
+          const icon = placeEvents.length > 0
+            ? this.buildEventBadgeIcon(baseIcon, placeEvents.length)
+            : baseIcon;
           let hoverCloseTimeout: number | undefined;
           let popupCloseAnimationTimeout: number | undefined;
 
@@ -565,7 +693,7 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
           };
 
           const marker = L.marker([pin.latitude, pin.longitude], { icon })
-            .bindPopup(this.buildPopupHtml(pin))
+            .bindPopup(this.buildPopupHtml(pin, placeEvents))
             .addTo(this.markerLayer);
 
           marker.on('mouseover', () => {
