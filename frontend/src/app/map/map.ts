@@ -1,6 +1,7 @@
 import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import * as L from 'leaflet';
 import { PlacePin, PlaceService, CreatePlaceRequest, NavigationResponse, PlaceSortOption } from '../core/place.service';
 import { EventService, EventResponse } from '../core/event.service';
@@ -84,8 +85,30 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
 
   constructor(
     private readonly placeService: PlaceService,
+    private readonly userState: UserStateService,
+    private readonly router: Router
     private readonly eventService: EventService
   ) {}
+
+  private goToFeedAndCreatePost(placeId: number): void {
+  this.router.navigate(['/feed'], { 
+    queryParams: { openNewPost: 'true', placeId: placeId } 
+  });
+}
+
+
+private deletePin(placeId: number): void {
+  // Zakładając, że masz taką metodę w PlaceService. 
+  // Jeśli nie, musisz ją dodać w core/place.service.ts
+  this.placeService.delete(placeId).subscribe({
+    next: () => {
+      // Zamyka popup i przeładowuje pinezki
+      this.map.closePopup();
+      this.scheduleReload();
+    },
+    error: (err) => console.error('Błąd usuwania pinezki', err)
+  });
+}
 
   ngOnInit(): void {
     this.searchSubject.pipe(
@@ -504,6 +527,12 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
           </svg>
           Pokaż trasę w Google Maps
         </button>
+        <button class="add-post-btn" data-place-id="${pin.id}" style="margin-top:5px; width:100%; padding:7px; background:#e0f2fe; color:#0369a1; border:none; border-radius:8px; cursor:pointer;">
+        Dodaj post z tego miejsca
+      </button>
+      <button class="delete-pin-btn" data-place-id="${pin.id}" style="margin-top:5px; width:100%; padding:7px; background:#fee2e2; color:#b91c1c; border:none; border-radius:8px; cursor:pointer;">
+        Usuń pinezkę
+      </button>
       </div>`;
   }
 
@@ -787,6 +816,25 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
 
       const placeId = Number(btn.getAttribute('data-place-id'));
       if (!placeId) return;
+
+      const addPostBtn = container.querySelector('.add-post-btn') as HTMLElement | null;
+  if (addPostBtn) {
+    const placeId = Number(addPostBtn.getAttribute('data-place-id'));
+    addPostBtn.addEventListener('click', (ev: Event) => {
+      ev.stopPropagation();
+      this.goToFeedAndCreatePost(placeId);
+    });
+  }
+
+  // Obsługa usuwania pinezki
+  const deleteBtn = container.querySelector('.delete-pin-btn') as HTMLElement | null;
+  if (deleteBtn) {
+    const placeId = Number(deleteBtn.getAttribute('data-place-id'));
+    deleteBtn.addEventListener('click', (ev: Event) => {
+      ev.stopPropagation();
+      this.deletePin(placeId);
+    });
+  }
 
       btn.addEventListener('click', (ev: Event) => {
         ev.stopPropagation();

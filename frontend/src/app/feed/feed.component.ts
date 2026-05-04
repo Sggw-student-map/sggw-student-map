@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 
 import {
   FeedService,
@@ -74,12 +75,23 @@ export class FeedComponent implements OnInit {
 
   constructor(
     private readonly feedService: FeedService,
-    private readonly placeService: PlaceService
+    private readonly placeService: PlaceService,
+    private readonly route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
     this.loadPosts();
     this.loadPlaces();
+
+    this.route.queryParams.subscribe(params => {
+      if (params['openNewPost'] === 'true') {
+        this.showModal = true;
+      }
+      if (params['placeId']) {
+        // Przypisanie ID miejsca do selecta w modalu
+        this.newPostPlaceId = Number(params['placeId']);
+      }
+      });
   }
 
   loadPosts(): void {
