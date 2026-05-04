@@ -14,7 +14,11 @@
 
   <main class="main-content">
 
-    <p class="empty" *ngIf="reviews.length === 0">Brak opinii. Bądź pierwszy!</p>
+    <h2 class="page-title">{{ myReviewsMode ? 'Moje opinie' : 'Wszystkie opinie' }}</h2>
+
+    <p class="empty" *ngIf="reviews.length === 0">
+      {{ myReviewsMode ? 'Nie masz jeszcze żadnych opinii.' : 'Brak opinii. Bądź pierwszy!' }}
+    </p>
 
     <div class="review-card" *ngFor="let review of reviews">
 

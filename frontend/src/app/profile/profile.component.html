@@ -92,7 +92,7 @@
         <div class="section-label">Skróty</div>
         <div class="info-list">
 
-          <a routerLink="/opinions" class="info-row info-row--link">
+          <a routerLink="/opinions" [queryParams]="{mine: true}" class="info-row info-row--link">
             <div class="info-left">
               <span class="info-icon icon-pink">⭐</span>
               <span class="info-key">Moje opinie</span>
