@@ -20,4 +20,7 @@ public interface FeedPostProjection {
     Long    getLikesCount();
     Long    getCommentsCount();
     Boolean getLikedByMe();
+
+    /** {@code true} gdy autor ma włączone prywatne konto (post widoczny tylko dla znajomych). */
+    Boolean getAuthorPrivateAccount();
 }

@@ -28,10 +28,12 @@ public interface FeedPostRepository extends JpaRepository<FeedPost, Integer> {
             EXISTS (
                 SELECT 1 FROM feed_post_likes l
                 WHERE l.post_id = p.id AND l.user_id = :viewerId
-            ) AS liked_by_me
+            ) AS liked_by_me,
+            COALESCE(us.private_account, false) AS author_private_account
         FROM feed_posts p
         JOIN users  u  ON u.id  = p.author_id
         LEFT JOIN places pl ON pl.id = p.place_id
+        LEFT JOIN user_settings us ON us.id_user = p.author_id
         ORDER BY p.created_at DESC
         """, nativeQuery = true)
     List<FeedPostProjection> findFeed(@Param("viewerId") Integer viewerId, Pageable pageable);
@@ -53,10 +55,12 @@ public interface FeedPostRepository extends JpaRepository<FeedPost, Integer> {
             EXISTS (
                 SELECT 1 FROM feed_post_likes l
                 WHERE l.post_id = p.id AND l.user_id = :viewerId
-            ) AS liked_by_me
+            ) AS liked_by_me,
+            COALESCE(us.private_account, false) AS author_private_account
         FROM feed_posts p
         JOIN users  u  ON u.id  = p.author_id
         LEFT JOIN places pl ON pl.id = p.place_id
+        LEFT JOIN user_settings us ON us.id_user = p.author_id
         WHERE p.id = :postId
         """, nativeQuery = true)
     FeedPostProjection findProjectionById(@Param("postId") Integer postId,

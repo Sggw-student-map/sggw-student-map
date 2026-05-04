@@ -27,6 +27,8 @@ export interface PostVM {
   comments: number;
   userLiked: boolean;
   authoredByMe: boolean;
+  /** Prywatny profil autora — treść dostępna tylko dla znajomych. */
+  authorPrivateAccount: boolean;
   newComment: string;
   commentsOpen: boolean;
   commentsLoading: boolean;
@@ -139,6 +141,7 @@ export class FeedComponent implements OnInit {
       next: (updated) => {
         post.likes = updated.likesCount;
         post.userLiked = updated.likedByMe;
+        post.authorPrivateAccount = !!updated.authorPrivateAccount;
       },
       error: () => {
         post.userLiked = previousLiked;
@@ -259,6 +262,7 @@ export class FeedComponent implements OnInit {
       comments: p.commentsCount,
       userLiked: p.likedByMe,
       authoredByMe: p.authoredByMe,
+      authorPrivateAccount: !!p.authorPrivateAccount,
       newComment: '',
       commentsOpen: false,
       commentsLoading: false,

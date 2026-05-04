@@ -150,9 +150,31 @@
   font-size: 15px; font-weight: 700; flex-shrink: 0;
   background: #E6F1FB; color: #0C447C;
 }
-.user-meta { flex: 1; }
+.user-meta { flex: 1; min-width: 0; }
+.name-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+}
 .username { font-size: 15px; font-weight: 700; color: #111827; }
-.time { font-size: 11px; color: #9ca3af; margin-left: 8px; }
+.time { font-size: 11px; color: #9ca3af; }
+.visibility-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 2px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #5b21b6;
+  background: #ede9fe;
+  border: 1px solid #ddd6fe;
+  white-space: nowrap;
+}
+.visibility-badge-icon { font-size: 11px; line-height: 1; }
 .place-chip {
   display: inline-flex; align-items: center; gap: 4px;
   margin-top: 4px; padding: 3px 10px;

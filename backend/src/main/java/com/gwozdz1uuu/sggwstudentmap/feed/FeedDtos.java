@@ -42,7 +42,8 @@ record FeedPostResponse(
         long likesCount,
         long commentsCount,
         boolean likedByMe,
-        boolean authoredByMe
+        boolean authoredByMe,
+        boolean authorPrivateAccount
 ) {}
 
 record FeedCommentResponse(

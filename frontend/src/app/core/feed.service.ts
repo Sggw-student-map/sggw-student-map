@@ -26,6 +26,8 @@ export interface FeedPost {
   commentsCount: number;
   likedByMe: boolean;
   authoredByMe: boolean;
+  /** Autor ma prywatne konto — post w feedzie widzą tylko znajomi. */
+  authorPrivateAccount: boolean;
 }
 
 export interface FeedComment {
