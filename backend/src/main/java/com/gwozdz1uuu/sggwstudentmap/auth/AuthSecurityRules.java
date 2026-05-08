@@ -19,8 +19,8 @@ public class AuthSecurityRules implements SecurityRules {
                 .requestMatchers(HttpMethod.GET, "/auth/me").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/reviews", "/api/reviews/**").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/api/reviews", "/api/reviews/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/users").permitAll();
-
+                .requestMatchers(HttpMethod.POST, "/users").permitAll()
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll();
     }
 }
 
