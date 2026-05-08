@@ -8,10 +8,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/api/places")
 @AllArgsConstructor
 @CrossOrigin
+@Tag(name = "Miejsca", description = "Miejsca na mapie — lista, wyszukiwanie, CRUD, nawigacja")
 public class PlaceController {
     private final PlaceService placeService;
 

@@ -7,10 +7,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @AllArgsConstructor
 @RequestMapping("/api/events")
 @CrossOrigin
+@Tag(name = "Wydarzenia", description = "Wydarzenia — tworzenie, udział, polubienia, komentarze")
 public class EventController {
 
     private final EventService eventService;

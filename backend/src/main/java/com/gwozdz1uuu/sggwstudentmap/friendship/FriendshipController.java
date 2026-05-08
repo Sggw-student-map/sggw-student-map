@@ -5,14 +5,16 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @AllArgsConstructor
 @RequestMapping("/api/friends")
 @CrossOrigin
+@Tag(name = "Znajomi", description = "Lista znajomych, zaproszenia, akceptacja")
 public class FriendshipController {
 
     private final FriendshipService friendshipService;

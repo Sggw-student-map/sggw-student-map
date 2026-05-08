@@ -8,6 +8,7 @@ import { ProfileComponent } from './profile/profile.component';
 import { FeedComponent } from './feed/feed.component';
 import { EventsComponent } from './events/events.component';
 import { SettingsComponent } from './settings/settings.component';
+import { ApiDocsComponent } from './docs/api-docs.component';
 import { authGuard } from './core/auth.guard';
 import { guestGuard } from './core/guest.guard';
 
@@ -22,5 +23,6 @@ export const routes: Routes = [
     { path: 'feed', component: FeedComponent, canActivate: [authGuard] },
     { path: 'events', component: EventsComponent, canActivate: [authGuard] },
     { path: 'settings', component: SettingsComponent, canActivate: [authGuard] },
+    { path: 'docs', component: ApiDocsComponent },
     { path: '**', redirectTo: 'login' }
 ];
