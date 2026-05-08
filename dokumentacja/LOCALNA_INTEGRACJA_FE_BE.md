@@ -1,13 +1,6 @@
 # Lokalna integracja frontend-backend
 
-## Co zostalo wdrozone
 
-- Frontend (`Angular`) komunikuje sie z backendem przez proxy dev (`/auth`, `/api` -> `http://localhost:8080`).
-- Backend ma ustawiony lokalny profil (`local`) i konfiguracje CORS pod `http://localhost:4200`.
-- Logowanie dziala przez `POST /auth/login`, a token dostepu jest zapisywany w `localStorage`.
-- Interceptor frontendu automatycznie dodaje naglowek `Authorization: Bearer <token>`.
-- Odswiezanie tokenu dziala przez `POST /auth/refresh` z `withCredentials: true` (refresh token w cookie `HttpOnly`).
-- Mapa pobiera dane pinow z backendu przez `GET /api/pins`.
 
 ## Najwazniejsze elementy techniczne
 
@@ -28,17 +21,17 @@
 
 ## Jak uruchomic lokalnie
 
-1. Uruchom baze:
-   - `cd db`
-   - `docker compose up -d`
-2. Uruchom backend:
+
+1. Uruchom backend:
    - `cd backend`
    - `mvnw.cmd spring-boot:run`
-3. Uruchom frontend:
+2. Uruchom frontend:
    - `cd frontend`
    - `npm install`
    - `npm start`
-4. Otworz aplikacje: `http://localhost:4200`.
+3. Otworz aplikacje: `http://localhost:4200`.
+
+
 
 ## Przeplyw logowania (lokalnie)
 
