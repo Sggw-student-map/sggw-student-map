@@ -12,10 +12,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RequiredArgsConstructor
 @RequestMapping("/auth")
 @RestController
+@Tag(name = "Autoryzacja", description = "Logowanie, odświeżanie tokenu JWT, bieżący użytkownik")
 public class AuthController {
     private final JwtConfig jwtConfig;
     private final UserMapper userMapper;

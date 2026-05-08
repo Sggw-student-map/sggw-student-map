@@ -5,9 +5,12 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/api/settings")
 @AllArgsConstructor
+@Tag(name = "Ustawienia", description = "Ustawienia konta zalogowanego użytkownika")
 public class UserSettingsController {
 
     private final UserSettingsService service;

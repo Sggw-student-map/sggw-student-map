@@ -8,10 +8,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/api/feed")
 @AllArgsConstructor
 @CrossOrigin
+@Tag(name = "Feed", description = "Posty, polubienia i komentarze w kanale")
 public class FeedController {
 
     private final FeedService feedService;

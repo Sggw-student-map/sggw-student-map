@@ -7,10 +7,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @AllArgsConstructor
 @RequestMapping("/api")
 @CrossOrigin
+@Tag(name = "Recenzje", description = "Opinie o miejscach")
 public class ReviewController {
 
     private final ReviewService reviewService;
