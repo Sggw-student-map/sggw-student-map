@@ -4,8 +4,17 @@ package com.gwozdz1uuu.sggwstudentmap.auth;
 import com.gwozdz1uuu.sggwstudentmap.auth.jwt.JwtConfig;
 import com.gwozdz1uuu.sggwstudentmap.auth.jwt.JwtResponse;
 import com.gwozdz1uuu.sggwstudentmap.auth.login.LoginRequest;
+import com.gwozdz1uuu.sggwstudentmap.repository.UserVerificationTokenRepository;
+import com.gwozdz1uuu.sggwstudentmap.user.UserRepository;
+import com.gwozdz1uuu.sggwstudentmap.user.UserVerificationToken;
+import com.gwozdz1uuu.sggwstudentmap.user.User;
+
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpHeaders;
@@ -22,6 +31,10 @@ public class AuthController {
     private final JwtConfig jwtConfig;
     private final UserMapper userMapper;
     private final AuthService authService;
+
+    private final UserVerificationTokenRepository tokenRepository;
+    private final UserRepository userRepository;
+
     @Value("${app.auth.refresh-cookie-secure:true}")
     private boolean refreshCookieSecure;
     @Value("${app.auth.refresh-cookie-same-site:Lax}")
@@ -69,4 +82,29 @@ public class AuthController {
         return ResponseEntity.ok(userDto);
     }
 
+    @GetMapping("/confirm")
+    public ResponseEntity<String> confirmRegistration(@RequestParam("token") String token) {
+        Optional<UserVerificationToken> optionalToken = tokenRepository.findByToken(token);
+        
+        if (optionalToken.isEmpty()) {
+            return ResponseEntity.badRequest().body("BŁĄD: Nieprawidłowy token weryfikacyjny.");
+        }
+        
+        UserVerificationToken vToken = optionalToken.get();
+        
+        // Sprawdzenie czy token nie wygasł
+        if (vToken.getExpiryDate().isBefore(LocalDateTime.now())) {
+            return ResponseEntity.badRequest().body("BŁĄD: Link weryfikacyjny wygasł.");
+        }
+
+        // Aktywacja użytkownika
+        User user = vToken.getUser();
+        user.setIsActive(true); 
+        userRepository.save(user); 
+        
+        //usunięcie tokena z bazy po użyciu
+        tokenRepository.delete(vToken);
+        
+        return ResponseEntity.ok("SUKCES: Twoje konto zostało aktywowane! Możesz się teraz zalogować.");
+    }
 }

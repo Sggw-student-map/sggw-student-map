@@ -16,6 +16,10 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserSettingsRepository userSettingsRepository;
 
+    // repozytorium i serwis mailowy
+    private final com.gwozdz1uuu.sggwstudentmap.repository.UserVerificationTokenRepository tokenRepository;
+    private final com.gwozdz1uuu.sggwstudentmap.mail.EmailService emailService;
+
     public List<UserResponse> getAllUsers() {
         return userRepository.findAll()
                 .stream()
@@ -43,13 +47,19 @@ public class UserService {
         user.setUsername(request.username());
         user.setEmail(request.email());
         user.setPassword(passwordEncoder.encode(request.password()));
-        user.setIsActive(true);
+        user.setIsActive(false);
 
         var saved = userRepository.save(user);
 
         UserSettings settings = new UserSettings();
         settings.setIdUser(saved.getId());
         userSettingsRepository.save(settings);
+
+        String token = java.util.UUID.randomUUID().toString();
+        UserVerificationToken verificationToken = new UserVerificationToken(token, saved);
+        tokenRepository.save(verificationToken);
+
+        emailService.sendVerificationEmail(saved.getEmail(), token);
 
         return UserResponse.from(saved);
     }
