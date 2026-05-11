@@ -11,6 +11,8 @@ import { SettingsComponent } from './settings/settings.component';
 import { ApiDocsComponent } from './docs/api-docs.component';
 import { authGuard } from './core/auth.guard';
 import { guestGuard } from './core/guest.guard';
+import { Verify } from './verify/verify';
+
 
 export const routes: Routes = [
     { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -24,5 +26,6 @@ export const routes: Routes = [
     { path: 'events', component: EventsComponent, canActivate: [authGuard] },
     { path: 'settings', component: SettingsComponent, canActivate: [authGuard] },
     { path: 'docs', component: ApiDocsComponent },
-    { path: '**', redirectTo: 'login' }
+    { path: 'verify', component: Verify},
+    { path: '**', redirectTo: 'login' },
 ];
