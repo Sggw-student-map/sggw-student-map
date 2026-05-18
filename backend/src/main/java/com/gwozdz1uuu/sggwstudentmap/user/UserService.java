@@ -35,10 +35,10 @@ public class UserService {
 
     public UserResponse createUser(CreateUserRequest request) {
         if (userRepository.existsByEmail(request.email())) {
-            throw new UserAlreadyExistsException("User with this email already exists");
+            throw new UserAlreadyExistsException("email", "Ten adres e-mail jest już zarejestrowany.");
         }
         if (userRepository.existsByUsername(request.username())) {
-            throw new UserAlreadyExistsException("User with this username already exists");
+            throw new UserAlreadyExistsException("username", "Ten login jest już zajęty. Wybierz inny.");
         }
 
         var user = new User();

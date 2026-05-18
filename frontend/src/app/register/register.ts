@@ -28,8 +28,9 @@ export class Register {
       username: ['', [Validators.required, Validators.maxLength(100)]],
       email: ['', [Validators.required, Validators.email, Validators.maxLength(255)]],
       password: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(25)]],
-      confirmPassword: ['', [Validators.required]]},
-      { validators: this.passwordsMatchValidator
+      confirmPassword: ['', [Validators.required]]
+    }, { 
+      validators: this.passwordsMatchValidator
     });
   }
 
@@ -66,9 +67,34 @@ export class Register {
           this.successMessage = 'Konto utworzone. Za chwile nastapi przekierowanie do logowania.';
           setTimeout(() => this.router.navigate(['/login']), 900);
         },
-        error: () => {
+        error: (err) => {
           this.isLoading = false;
-          this.errorMessage = 'Nie udalo sie zalozyc konta. Sprawdz dane lub sprobuj ponownie.';
+          
+          // ZMIANA: Sprawdzamy, czy backend zwrócił obiekt z detalami błędu
+          if (err.status === 400 && err.error && err.error.details) {
+            let hasSpecificErrors = false;
+            const serverErrors = err.error.details; 
+            
+            // Iterujemy po wszystkich błędach i przypisujemy je do pól w formularzu
+            for (const field of Object.keys(serverErrors)) {
+              const control = this.registerForm.get(field);
+              
+              if (control) {
+                // Ustawiamy błąd 'serverError' z wiadomością od Spring Boota
+                control.setErrors({ serverError: serverErrors[field] });
+                control.markAsTouched(); // Wymuszamy pokazanie czerwonej ramki
+                hasSpecificErrors = true;
+              }
+            }
+
+            // Jeśli nie przypisano błędów do konkretnych pól, pokaż ogólny komunikat
+            if (!hasSpecificErrors) {
+              this.errorMessage = err.error.message || 'Nie udało się założyć konta ze względu na nieprawidłowe dane.';
+            }
+          } else {
+            // Fallback na wypadek innych błędów (np. 500 Internal Server Error)
+            this.errorMessage = 'Wystąpił błąd serwera. Spróbuj ponownie później.';
+          }
         }
       });
   }

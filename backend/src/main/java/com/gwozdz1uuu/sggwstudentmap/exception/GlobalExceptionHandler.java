@@ -26,7 +26,14 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<Map<String, Object>> handleUserAlreadyExists(UserAlreadyExistsException ex) {
-        return buildError(HttpStatus.CONFLICT, ex.getMessage());
+        Map<String, Object> body = baseBody(HttpStatus.BAD_REQUEST, "Resource already exists");
+        
+        Map<String, String> fieldErrors = new HashMap<>();
+        fieldErrors.put(ex.getFieldName(), ex.getMessage());
+        
+        body.put("details", fieldErrors);
+        
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
     @ExceptionHandler(BadCredentialsException.class)
