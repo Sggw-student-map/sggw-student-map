@@ -22,13 +22,20 @@ public class PlaceController {
     public ResponseEntity<List<PlaceResponse>> getAllPlaces(
             @RequestParam(name = "sort", required = false) String sort,
             @RequestParam(name = "minRating", required = false) Double minRating,
+            @RequestParam(name = "maxRating", required = false) Double maxRating,
             @RequestParam(name = "onlyRated", required = false, defaultValue = "false") boolean onlyRated,
             @RequestParam(name = "limit", required = false) Integer limit
     ) {
         Double safeMinRating = (minRating != null && minRating > 0) ? minRating : null;
+        Double safeMaxRating = (maxRating != null && maxRating > 0 && maxRating < 5) ? maxRating : null;
+        if (safeMinRating != null && safeMaxRating != null && safeMaxRating < safeMinRating) {
+            safeMaxRating = safeMinRating;
+        }
         Integer safeLimit = (limit != null && limit > 0) ? limit : null;
         PlaceSortOption sortOption = PlaceSortOption.fromString(sort);
-        return ResponseEntity.ok(placeService.getAllPlaces(sortOption, safeMinRating, onlyRated, safeLimit));
+        return ResponseEntity.ok(
+                placeService.getAllPlaces(sortOption, safeMinRating, safeMaxRating, onlyRated, safeLimit)
+        );
     }
 
     @GetMapping("/search")

@@ -64,7 +64,11 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
   ];
 
   selectedSort: PlaceSortOption = 'RECENT';
+  readonly ratingMin = 0;
+  readonly ratingMax = 5;
+  readonly ratingStep = 0.5;
   minRating = 0;
+  maxRating = 5;
   onlyRated = false;
   limit: number | null = null;
   readonly limitOptions: { value: number | null; label: string }[] = [
@@ -434,9 +438,34 @@ private deletePin(placeId: number): void {
   }
 
   onMinRatingChange(value: number | string): void {
-    const parsed = typeof value === 'string' ? parseFloat(value) : value;
-    this.minRating = Number.isFinite(parsed) ? Math.max(0, Math.min(5, parsed)) : 0;
+    const parsed = this.clampRating(value);
+    this.minRating = Math.min(parsed, this.maxRating);
     this.scheduleReload();
+  }
+
+  onMaxRatingChange(value: number | string): void {
+    const parsed = this.clampRating(value);
+    this.maxRating = Math.max(parsed, this.minRating);
+    this.scheduleReload();
+  }
+
+  private clampRating(value: number | string): number {
+    const parsed = typeof value === 'string' ? parseFloat(value) : value;
+    if (!Number.isFinite(parsed)) {
+      return this.ratingMin;
+    }
+    return Math.max(this.ratingMin, Math.min(this.ratingMax, parsed));
+  }
+
+  get ratingRangePercent(): { left: number; right: number } {
+    const span = this.ratingMax - this.ratingMin;
+    const left = ((this.minRating - this.ratingMin) / span) * 100;
+    const right = 100 - ((this.maxRating - this.ratingMin) / span) * 100;
+    return { left, right };
+  }
+
+  get isRatingRangeNarrowed(): boolean {
+    return this.minRating > this.ratingMin || this.maxRating < this.ratingMax;
   }
 
   toggleOnlyRated(): void {
@@ -453,7 +482,8 @@ private deletePin(placeId: number): void {
   }
 
   resetFilters(): void {
-    this.minRating = 0;
+    this.minRating = this.ratingMin;
+    this.maxRating = this.ratingMax;
     this.onlyRated = false;
     this.selectedSort = 'RECENT';
     this.limit = null;
@@ -463,7 +493,7 @@ private deletePin(placeId: number): void {
   private scheduleReload(): void {
     this.isRatingFilterActive =
       this.selectedSort !== 'RECENT' ||
-      this.minRating > 0 ||
+      this.isRatingRangeNarrowed ||
       this.onlyRated ||
       this.limit !== null;
     this.reloadSubject.next();
@@ -658,6 +688,7 @@ private deletePin(placeId: number): void {
     const pins$ = this.placeService.getAll({
       sort: this.selectedSort,
       minRating: this.minRating,
+      maxRating: this.maxRating,
       onlyRated: this.onlyRated,
       limit: this.limit,
     });

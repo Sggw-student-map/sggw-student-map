@@ -18,12 +18,13 @@ public class PlaceService {
     private final ReviewRepository reviewRepository;
 
     public List<PlaceResponse> getAllPlaces() {
-        return getAllPlaces(PlaceSortOption.RECENT, null, false, null);
+        return getAllPlaces(PlaceSortOption.RECENT, null, null, false, null);
     }
 
     public List<PlaceResponse> getAllPlaces(
             PlaceSortOption sort,
             Double minRating,
+            Double maxRating,
             boolean onlyRated,
             Integer limit
     ) {
@@ -40,8 +41,13 @@ public class PlaceService {
         }
 
         if (minRating != null) {
-            double threshold = minRating;
-            stream = stream.filter(p -> p.averageRating() != null && p.averageRating() >= threshold);
+            double lowerBound = minRating;
+            stream = stream.filter(p -> p.averageRating() != null && p.averageRating() >= lowerBound);
+        }
+
+        if (maxRating != null) {
+            double upperBound = maxRating;
+            stream = stream.filter(p -> p.averageRating() != null && p.averageRating() <= upperBound);
         }
 
         Stream<PlaceResponse> sorted = stream.sorted(effectiveSort.comparator());
