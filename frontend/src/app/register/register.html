@@ -12,40 +12,54 @@
         <input type="text" formControlName="firstName" placeholder="Imię"
           class="w-full h-11 rounded-full px-6 text-center text-gray-700 font-medium bg-white/90 shadow-[0_4px_10px_rgba(0,0,0,0.05)] border focus:outline-none focus:ring-2 transition-all placeholder:text-gray-400 placeholder:font-normal"
           [ngClass]="{'border-red-500 focus:ring-red-200': registerForm.get('firstName')?.invalid && registerForm.get('firstName')?.touched, 'border-transparent focus:border-green-300 focus:ring-green-100': !(registerForm.get('firstName')?.invalid && registerForm.get('firstName')?.touched)}">
+        
         <p *ngIf="registerForm.get('firstName')?.hasError('required') && registerForm.get('firstName')?.touched" class="text-red-500 text-xs mt-1 ml-4 text-left">Imię jest wymagane.</p>
+        <p *ngIf="registerForm.get('firstName')?.hasError('serverError')" class="text-red-500 text-xs mt-1 ml-4 text-left">{{ registerForm.get('firstName')?.getError('serverError') }}</p>
       </div>
 
       <div>
         <input type="text" formControlName="lastName" placeholder="Nazwisko"
           class="w-full h-11 rounded-full px-6 text-center text-gray-700 font-medium bg-white/90 shadow border transition-all placeholder:text-gray-400 placeholder:font-normal"
           [ngClass]="{'border-red-500 focus:ring-red-200': registerForm.get('lastName')?.invalid && registerForm.get('lastName')?.touched, 'border-transparent focus:border-green-300 focus:ring-green-100': !(registerForm.get('lastName')?.invalid && registerForm.get('lastName')?.touched)}">
+        
+        <p *ngIf="registerForm.get('lastName')?.hasError('required') && registerForm.get('lastName')?.touched" class="text-red-500 text-xs mt-1 ml-4 text-left">Nazwisko jest wymagane.</p>
+        <p *ngIf="registerForm.get('lastName')?.hasError('serverError')" class="text-red-500 text-xs mt-1 ml-4 text-left">{{ registerForm.get('lastName')?.getError('serverError') }}</p>
       </div>
 
       <div>
         <input type="text" formControlName="username" placeholder="Login"
           class="w-full h-11 rounded-full px-6 text-center text-gray-700 font-medium bg-white/90 shadow border transition-all placeholder:text-gray-400 placeholder:font-normal"
           [ngClass]="{'border-red-500 focus:ring-red-200': registerForm.get('username')?.invalid && registerForm.get('username')?.touched, 'border-transparent focus:border-green-300 focus:ring-green-100': !(registerForm.get('username')?.invalid && registerForm.get('username')?.touched)}">
+        
+        <p *ngIf="registerForm.get('username')?.hasError('required') && registerForm.get('username')?.touched" class="text-red-500 text-xs mt-1 ml-4 text-left">Login jest wymagany.</p>
+        <p *ngIf="registerForm.get('username')?.hasError('serverError')" class="text-red-500 text-xs mt-1 ml-4 text-left">{{ registerForm.get('username')?.getError('serverError') }}</p>
       </div>
 
       <div>
         <input type="email" formControlName="email" placeholder="Email"
           class="w-full h-11 rounded-full px-6 text-center text-gray-700 font-medium bg-white/90 shadow border transition-all placeholder:text-gray-400 placeholder:font-normal"
           [ngClass]="{'border-red-500 focus:ring-red-200': registerForm.get('email')?.invalid && registerForm.get('email')?.touched, 'border-transparent focus:border-green-300 focus:ring-green-100': !(registerForm.get('email')?.invalid && registerForm.get('email')?.touched)}">
-        <p *ngIf="registerForm.get('email')?.hasError('email') && registerForm.get('email')?.touched" class="text-red-500 text-xs mt-1 ml-4 text-left">Podaj poprawny adres email.</p>
+        
+        <p *ngIf="registerForm.get('email')?.hasError('required') && registerForm.get('email')?.touched" class="text-red-500 text-xs mt-1 ml-4 text-left">Email jest wymagany.</p>
+        <p *ngIf="registerForm.get('email')?.hasError('email') && registerForm.get('email')?.touched && !registerForm.get('email')?.hasError('serverError')" class="text-red-500 text-xs mt-1 ml-4 text-left">Podaj poprawny adres email.</p>
+        <p *ngIf="registerForm.get('email')?.hasError('serverError')" class="text-red-500 text-xs mt-1 ml-4 text-left">{{ registerForm.get('email')?.getError('serverError') }}</p>
       </div>
 
       <div>
         <input type="password" formControlName="password" placeholder="Hasło"
           class="w-full h-11 rounded-full px-6 text-center text-gray-700 font-medium bg-white/90 shadow border transition-all placeholder:text-gray-400 placeholder:font-normal"
           [ngClass]="{'border-red-500 focus:ring-red-200': registerForm.get('password')?.invalid && registerForm.get('password')?.touched, 'border-transparent focus:border-green-300 focus:ring-green-100': !(registerForm.get('password')?.invalid && registerForm.get('password')?.touched)}">
-        <p *ngIf="registerForm.get('password')?.hasError('minlength') && registerForm.get('password')?.touched" class="text-red-500 text-xs mt-1 ml-4 text-left">Hasło musi mieć min. 6 znaków.</p>
+        
         <p *ngIf="registerForm.get('password')?.hasError('required') && registerForm.get('password')?.touched" class="text-red-500 text-xs mt-1 ml-4 text-left">Hasło jest wymagane.</p>
+        <p *ngIf="registerForm.get('password')?.hasError('minlength') && registerForm.get('password')?.touched" class="text-red-500 text-xs mt-1 ml-4 text-left">Hasło musi mieć min. 6 znaków.</p>
+        <p *ngIf="registerForm.get('password')?.hasError('serverError')" class="text-red-500 text-xs mt-1 ml-4 text-left">{{ registerForm.get('password')?.getError('serverError') }}</p>
       </div>
 
       <div>
         <input type="password" formControlName="confirmPassword" placeholder="Powtórz hasło"
           class="w-full h-11 rounded-full px-6 text-center text-gray-700 font-medium bg-white/90 shadow border transition-all placeholder:text-gray-400 placeholder:font-normal"
           [ngClass]="{'border-red-500 focus:ring-red-200': registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched, 'border-transparent focus:border-green-300 focus:ring-green-100': !(registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched)}">
+        
         <p *ngIf="registerForm.get('confirmPassword')?.hasError('required') && registerForm.get('confirmPassword')?.touched && !registerForm.get('confirmPassword')?.hasError('passwordMismatch')" class="text-red-500 text-xs mt-1 ml-4 text-left">Wymagane potwierdzenie hasła.</p>
         <p *ngIf="registerForm.get('confirmPassword')?.hasError('passwordMismatch') && registerForm.get('confirmPassword')?.touched" class="text-red-500 text-xs mt-1 ml-4 text-left">Hasła nie są identyczne.</p>
       </div>
