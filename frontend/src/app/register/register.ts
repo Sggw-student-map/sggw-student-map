@@ -1,49 +1,65 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl } from '@angular/forms';
 import { AuthService } from '../core/auth.service';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule],
   templateUrl: './register.html',
   styleUrl: './register.css'
 })
 export class Register {
+  registerForm: FormGroup;
   isLoading = false;
   errorMessage = '';
   successMessage = '';
 
   constructor(
     private readonly authService: AuthService,
-    private readonly router: Router
-  ) {}
+    private readonly router: Router,
+    private fb: FormBuilder
+  ) {
+    this.registerForm = this.fb.group({
+      firstName: ['', [Validators.required, Validators.maxLength(100)]],
+      lastName: ['', [Validators.required, Validators.maxLength(100)]],
+      username: ['', [Validators.required, Validators.maxLength(100)]],
+      email: ['', [Validators.required, Validators.email, Validators.maxLength(255)]],
+      password: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(25)]],
+      confirmPassword: ['', [Validators.required]]},
+      { validators: this.passwordsMatchValidator
+    });
+  }
 
-  onRegister(
-    firstName: string,
-    lastName: string,
-    username: string,
-    email: string,
-    password: string
-  ): void {
+  private passwordsMatchValidator(control: AbstractControl) {
+    const password = control.get('password')?.value;
+    const confirmPassword = control.get('confirmPassword')?.value;
+
+    if (password !== confirmPassword) {
+      control.get('confirmPassword')?.setErrors({ passwordMismatch: true });
+      return { passwordMismatch: true };
+    } else {
+      return null;
+    }
+  }
+
+  onRegister(): void {
     this.errorMessage = '';
     this.successMessage = '';
 
-    if (!firstName.trim() || !lastName.trim() || !username.trim() || !email.trim() || !password.trim()) {
-      this.errorMessage = 'Wypelnij wszystkie pola.';
+    if (this.registerForm.invalid) {
+      this.registerForm.markAllAsTouched();
       return;
     }
 
     this.isLoading = true;
+
+    const { confirmPassword, ...requestData } = this.registerForm.value;
+
     this.authService
-      .register({
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        username: username.trim(),
-        email: email.trim(),
-        password: password.trim()
-      })
+      .register(requestData)
       .subscribe({
         next: () => {
           this.isLoading = false;

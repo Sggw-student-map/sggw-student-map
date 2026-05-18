@@ -4,37 +4,60 @@
       <img src="/logo.png" alt="Logo SGGWmapka" class="w-24 h-24 object-contain drop-shadow-lg">
     </div>
 
-    <h1 class="text-3xl font-serif font-bold text-black tracking-wide mb-8">
-      Rejestracja
-    </h1>
+    <h1 class="text-3xl font-serif font-bold text-black tracking-wide mb-8">Rejestracja</h1>
 
-    <div class="flex flex-col gap-3 w-80">
-      <input #firstNameInput type="text" placeholder="Imie"
-        class="w-full h-11 rounded-full px-6 text-center text-gray-700 font-medium bg-white/90 shadow-[0_4px_10px_rgba(0,0,0,0.05)] border border-transparent focus:outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100 transition-all placeholder:text-gray-400 placeholder:font-normal">
+    <form [formGroup]="registerForm" (ngSubmit)="onRegister()" class="flex flex-col gap-3 w-80">
+      
+      <div>
+        <input type="text" formControlName="firstName" placeholder="Imię"
+          class="w-full h-11 rounded-full px-6 text-center text-gray-700 font-medium bg-white/90 shadow-[0_4px_10px_rgba(0,0,0,0.05)] border focus:outline-none focus:ring-2 transition-all placeholder:text-gray-400 placeholder:font-normal"
+          [ngClass]="{'border-red-500 focus:ring-red-200': registerForm.get('firstName')?.invalid && registerForm.get('firstName')?.touched, 'border-transparent focus:border-green-300 focus:ring-green-100': !(registerForm.get('firstName')?.invalid && registerForm.get('firstName')?.touched)}">
+        <p *ngIf="registerForm.get('firstName')?.hasError('required') && registerForm.get('firstName')?.touched" class="text-red-500 text-xs mt-1 ml-4 text-left">Imię jest wymagane.</p>
+      </div>
 
-      <input #lastNameInput type="text" placeholder="Nazwisko"
-        class="w-full h-11 rounded-full px-6 text-center text-gray-700 font-medium bg-white/90 shadow-[0_4px_10px_rgba(0,0,0,0.05)] border border-transparent focus:outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100 transition-all placeholder:text-gray-400 placeholder:font-normal">
+      <div>
+        <input type="text" formControlName="lastName" placeholder="Nazwisko"
+          class="w-full h-11 rounded-full px-6 text-center text-gray-700 font-medium bg-white/90 shadow border transition-all placeholder:text-gray-400 placeholder:font-normal"
+          [ngClass]="{'border-red-500 focus:ring-red-200': registerForm.get('lastName')?.invalid && registerForm.get('lastName')?.touched, 'border-transparent focus:border-green-300 focus:ring-green-100': !(registerForm.get('lastName')?.invalid && registerForm.get('lastName')?.touched)}">
+      </div>
 
-      <input #usernameInput type="text" placeholder="Login"
-        class="w-full h-11 rounded-full px-6 text-center text-gray-700 font-medium bg-white/90 shadow-[0_4px_10px_rgba(0,0,0,0.05)] border border-transparent focus:outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100 transition-all placeholder:text-gray-400 placeholder:font-normal">
+      <div>
+        <input type="text" formControlName="username" placeholder="Login"
+          class="w-full h-11 rounded-full px-6 text-center text-gray-700 font-medium bg-white/90 shadow border transition-all placeholder:text-gray-400 placeholder:font-normal"
+          [ngClass]="{'border-red-500 focus:ring-red-200': registerForm.get('username')?.invalid && registerForm.get('username')?.touched, 'border-transparent focus:border-green-300 focus:ring-green-100': !(registerForm.get('username')?.invalid && registerForm.get('username')?.touched)}">
+      </div>
 
-      <input #emailInput type="email" placeholder="Email"
-        class="w-full h-11 rounded-full px-6 text-center text-gray-700 font-medium bg-white/90 shadow-[0_4px_10px_rgba(0,0,0,0.05)] border border-transparent focus:outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100 transition-all placeholder:text-gray-400 placeholder:font-normal">
+      <div>
+        <input type="email" formControlName="email" placeholder="Email"
+          class="w-full h-11 rounded-full px-6 text-center text-gray-700 font-medium bg-white/90 shadow border transition-all placeholder:text-gray-400 placeholder:font-normal"
+          [ngClass]="{'border-red-500 focus:ring-red-200': registerForm.get('email')?.invalid && registerForm.get('email')?.touched, 'border-transparent focus:border-green-300 focus:ring-green-100': !(registerForm.get('email')?.invalid && registerForm.get('email')?.touched)}">
+        <p *ngIf="registerForm.get('email')?.hasError('email') && registerForm.get('email')?.touched" class="text-red-500 text-xs mt-1 ml-4 text-left">Podaj poprawny adres email.</p>
+      </div>
 
-      <input #passwordInput type="password" placeholder="Haslo"
-        (keyup.enter)="onRegister(firstNameInput.value, lastNameInput.value, usernameInput.value, emailInput.value, passwordInput.value)"
-        class="w-full h-11 rounded-full px-6 text-center text-gray-700 font-medium bg-white/90 shadow-[0_4px_10px_rgba(0,0,0,0.05)] border border-transparent focus:outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100 transition-all placeholder:text-gray-400 placeholder:font-normal">
+      <div>
+        <input type="password" formControlName="password" placeholder="Hasło"
+          class="w-full h-11 rounded-full px-6 text-center text-gray-700 font-medium bg-white/90 shadow border transition-all placeholder:text-gray-400 placeholder:font-normal"
+          [ngClass]="{'border-red-500 focus:ring-red-200': registerForm.get('password')?.invalid && registerForm.get('password')?.touched, 'border-transparent focus:border-green-300 focus:ring-green-100': !(registerForm.get('password')?.invalid && registerForm.get('password')?.touched)}">
+        <p *ngIf="registerForm.get('password')?.hasError('minlength') && registerForm.get('password')?.touched" class="text-red-500 text-xs mt-1 ml-4 text-left">Hasło musi mieć min. 6 znaków.</p>
+        <p *ngIf="registerForm.get('password')?.hasError('required') && registerForm.get('password')?.touched" class="text-red-500 text-xs mt-1 ml-4 text-left">Hasło jest wymagane.</p>
+      </div>
 
-      <button type="button"
-        (click)="onRegister(firstNameInput.value, lastNameInput.value, usernameInput.value, emailInput.value, passwordInput.value)"
-        [disabled]="isLoading"
-        class="w-full h-11 rounded-full px-6 text-center font-semibold bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-70 disabled:cursor-not-allowed transition-colors">
+      <div>
+        <input type="password" formControlName="confirmPassword" placeholder="Powtórz hasło"
+          class="w-full h-11 rounded-full px-6 text-center text-gray-700 font-medium bg-white/90 shadow border transition-all placeholder:text-gray-400 placeholder:font-normal"
+          [ngClass]="{'border-red-500 focus:ring-red-200': registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched, 'border-transparent focus:border-green-300 focus:ring-green-100': !(registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched)}">
+        <p *ngIf="registerForm.get('confirmPassword')?.hasError('required') && registerForm.get('confirmPassword')?.touched && !registerForm.get('confirmPassword')?.hasError('passwordMismatch')" class="text-red-500 text-xs mt-1 ml-4 text-left">Wymagane potwierdzenie hasła.</p>
+        <p *ngIf="registerForm.get('confirmPassword')?.hasError('passwordMismatch') && registerForm.get('confirmPassword')?.touched" class="text-red-500 text-xs mt-1 ml-4 text-left">Hasła nie są identyczne.</p>
+      </div>
+
+      <button type="submit" [disabled]="isLoading"
+        class="w-full h-11 mt-2 rounded-full px-6 text-center font-semibold bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-70 disabled:cursor-not-allowed transition-colors">
         {{ isLoading ? 'Tworzenie konta...' : 'Utworz konto' }}
       </button>
 
-      <p *ngIf="errorMessage" class="text-center text-red-600 text-sm">{{ errorMessage }}</p>
-      <p *ngIf="successMessage" class="text-center text-emerald-700 text-sm">{{ successMessage }}</p>
-    </div>
+      <p *ngIf="errorMessage" class="text-center text-red-600 text-sm mt-2">{{ errorMessage }}</p>
+      <p *ngIf="successMessage" class="text-center text-emerald-700 text-sm mt-2">{{ successMessage }}</p>
+    </form>
 
     <div class="mt-5 text-sm">
       <span class="text-gray-500">Masz juz konto? </span>
