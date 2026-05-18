@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { switchMap } from 'rxjs/operators';
 import { AuthService } from '../core/auth.service';
 import { UserStateService } from '../core/user-state.service';
@@ -8,11 +9,12 @@ import { UserStateService } from '../core/user-state.service';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule],
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
-export class Login {
+export class Login implements OnInit {
+  loginForm!: FormGroup;
   isLoading = false;
   errorMessage = '';
 
@@ -20,20 +22,29 @@ export class Login {
     private readonly router: Router,
     private readonly route: ActivatedRoute,
     private readonly authService: AuthService,
-    private readonly userState: UserStateService
+    private readonly userState: UserStateService,
+    private fb: FormBuilder
   ) {}
-
-  onLogin(username: string, password: string): void {
+  
+  ngOnInit(): void {
+    this.loginForm = this.fb.group({
+      username: ['', Validators.required],
+      password: ['', Validators.required]
+    });
+  } 
+  
+  onLogin(): void {
     this.errorMessage = '';
 
-    if (!username.trim() || !password.trim()) {
-      this.errorMessage = 'Wpisz login i hasło.';
+    if (this.loginForm.invalid) {
+      this.loginForm.markAllAsTouched();
       return;
     }
-
+  
     this.isLoading = true;
+
     this.authService
-      .login({ username: username.trim(), password: password.trim() })
+      .login(this.loginForm.value)
       .pipe(switchMap(() => this.userState.loadUser()))
       .subscribe({
         next: () => {
