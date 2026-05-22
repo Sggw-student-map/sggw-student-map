@@ -1,8 +1,21 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl } from '@angular/forms';
 import { AuthService } from '../core/auth.service';
+
+import kampus1Img from '../../../resources/images/kampus1.jpg';
+import kampus2Img from '../../../resources/images/kampus2.jpg';
+import wydarzenia1Img from '../../../resources/images/wydarzenia1.png';
+import spolecznosc1Img from '../../../resources/images/spolecznosc1.png';
+
+interface CampusSlide {
+  src: string;
+  title: string;
+  subtitle: string;
+  gradient: string;
+  imageOk: boolean;
+}
 
 @Component({
   selector: 'app-register',
@@ -11,11 +24,46 @@ import { AuthService } from '../core/auth.service';
   templateUrl: './register.html',
   styleUrl: './register.css'
 })
-export class Register {
+export class Register implements OnInit, OnDestroy {
   registerForm: FormGroup;
   isLoading = false;
   errorMessage = '';
   successMessage = '';
+
+  readonly slides: CampusSlide[] = [
+    {
+      src: kampus1Img,
+      title: 'Kampus SGGW',
+      subtitle: 'Twoje miejsce na mapie studenckiego życia',
+      gradient: 'linear-gradient(135deg, #134e4a 0%, #0f766e 45%, #10b981 100%)',
+      imageOk: true,
+    },
+    {
+      src: kampus2Img,
+      title: 'Poznaj kampus',
+      subtitle: 'Odkryj budynki, akademiki i ulubione zakątki studentów',
+      gradient: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #06b6d4 100%)',
+      imageOk: true,
+    },
+    {
+      src: wydarzenia1Img,
+      title: 'Wydarzenia studenckie',
+      subtitle: 'Bądź na bieżąco z tym, co dzieje się w okolicy',
+      gradient: 'linear-gradient(135deg, #7c2d12 0%, #ea580c 45%, #f59e0b 100%)',
+      imageOk: true,
+    },
+    {
+      src: spolecznosc1Img,
+      title: 'Społeczność SGGW',
+      subtitle: 'Spotykaj się, dziel opiniami i twórz wspomnienia',
+      gradient: 'linear-gradient(135deg, #4c1d95 0%, #7c3aed 50%, #ec4899 100%)',
+      imageOk: true,
+    },
+  ];
+
+  currentSlide = 0;
+  private slideTimer: ReturnType<typeof setInterval> | null = null;
+  private readonly slideIntervalMs = 6000;
 
   constructor(
     private readonly authService: AuthService,
@@ -29,9 +77,53 @@ export class Register {
       email: ['', [Validators.required, Validators.email, Validators.maxLength(255)]],
       password: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(25)]],
       confirmPassword: ['', [Validators.required]]
-    }, { 
+    }, {
       validators: this.passwordsMatchValidator
     });
+  }
+
+  ngOnInit(): void {
+    this.startSlideShow();
+  }
+
+  ngOnDestroy(): void {
+    this.stopSlideShow();
+  }
+
+  goToSlide(index: number): void {
+    if (index === this.currentSlide) return;
+    this.currentSlide = (index + this.slides.length) % this.slides.length;
+    this.restartSlideShow();
+  }
+
+  nextSlide(): void {
+    this.goToSlide(this.currentSlide + 1);
+  }
+
+  prevSlide(): void {
+    this.goToSlide(this.currentSlide - 1);
+  }
+
+  onImageError(slide: CampusSlide): void {
+    slide.imageOk = false;
+  }
+
+  private startSlideShow(): void {
+    this.stopSlideShow();
+    this.slideTimer = setInterval(() => {
+      this.currentSlide = (this.currentSlide + 1) % this.slides.length;
+    }, this.slideIntervalMs);
+  }
+
+  private stopSlideShow(): void {
+    if (this.slideTimer) {
+      clearInterval(this.slideTimer);
+      this.slideTimer = null;
+    }
+  }
+
+  private restartSlideShow(): void {
+    this.startSlideShow();
   }
 
   private passwordsMatchValidator(control: AbstractControl) {
@@ -64,35 +156,30 @@ export class Register {
       .subscribe({
         next: () => {
           this.isLoading = false;
-          this.successMessage = 'Konto utworzone. Za chwile nastapi przekierowanie do logowania.';
+          this.successMessage = 'Konto utworzone. Za chwilę nastąpi przekierowanie do logowania.';
           setTimeout(() => this.router.navigate(['/login']), 900);
         },
         error: (err) => {
           this.isLoading = false;
-          
-          // ZMIANA: Sprawdzamy, czy backend zwrócił obiekt z detalami błędu
+
           if (err.status === 400 && err.error && err.error.details) {
             let hasSpecificErrors = false;
-            const serverErrors = err.error.details; 
-            
-            // Iterujemy po wszystkich błędach i przypisujemy je do pól w formularzu
+            const serverErrors = err.error.details;
+
             for (const field of Object.keys(serverErrors)) {
               const control = this.registerForm.get(field);
-              
+
               if (control) {
-                // Ustawiamy błąd 'serverError' z wiadomością od Spring Boota
                 control.setErrors({ serverError: serverErrors[field] });
-                control.markAsTouched(); // Wymuszamy pokazanie czerwonej ramki
+                control.markAsTouched();
                 hasSpecificErrors = true;
               }
             }
 
-            // Jeśli nie przypisano błędów do konkretnych pól, pokaż ogólny komunikat
             if (!hasSpecificErrors) {
               this.errorMessage = err.error.message || 'Nie udało się założyć konta ze względu na nieprawidłowe dane.';
             }
           } else {
-            // Fallback na wypadek innych błędów (np. 500 Internal Server Error)
             this.errorMessage = 'Wystąpił błąd serwera. Spróbuj ponownie później.';
           }
         }
