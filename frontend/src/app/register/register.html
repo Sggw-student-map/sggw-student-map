@@ -1,81 +1,202 @@
-<div class="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-tr from-green-100 via-yellow-50 to-pink-100 relative overflow-hidden">
-  <div class="z-10 flex flex-col items-center">
-    <div class="mb-4">
-      <img src="/logo.png" alt="Logo SGGWmapka" class="w-24 h-24 object-contain drop-shadow-lg">
-    </div>
+<div class="register-page relative min-h-screen w-full overflow-hidden bg-gradient-to-tr from-emerald-50 via-yellow-50 to-pink-100">
 
-    <h1 class="text-3xl font-serif font-bold text-black tracking-wide mb-8">Rejestracja</h1>
+  <div class="login-bg pointer-events-none absolute inset-0">
+    <span class="blob blob-1"></span>
+    <span class="blob blob-2"></span>
+    <span class="blob blob-3"></span>
+    <span class="grid-overlay"></span>
+  </div>
 
-    <form [formGroup]="registerForm" (ngSubmit)="onRegister()" class="flex flex-col gap-3 w-80">
-      
-      <div>
-        <input type="text" formControlName="firstName" placeholder="Imię"
-          class="w-full h-11 rounded-full px-6 text-center text-gray-700 font-medium bg-white/90 shadow-[0_4px_10px_rgba(0,0,0,0.05)] border focus:outline-none focus:ring-2 transition-all placeholder:text-gray-400 placeholder:font-normal"
-          [ngClass]="{'border-red-500 focus:ring-red-200': registerForm.get('firstName')?.invalid && registerForm.get('firstName')?.touched, 'border-transparent focus:border-green-300 focus:ring-green-100': !(registerForm.get('firstName')?.invalid && registerForm.get('firstName')?.touched)}">
-        
-        <p *ngIf="registerForm.get('firstName')?.hasError('required') && registerForm.get('firstName')?.touched" class="text-red-500 text-xs mt-1 ml-4 text-left">Imię jest wymagane.</p>
-        <p *ngIf="registerForm.get('firstName')?.hasError('serverError')" class="text-red-500 text-xs mt-1 ml-4 text-left">{{ registerForm.get('firstName')?.getError('serverError') }}</p>
+  <div class="relative z-10 flex min-h-screen w-full flex-col lg:flex-row">
+
+    <section class="flex w-full items-center justify-center px-6 py-10 sm:px-10 lg:w-[46%] lg:px-16">
+      <div class="glass-card w-full max-w-md">
+
+        <div class="flex flex-col items-center text-center">
+          <div class="logo-wrap mb-3">
+            <img src="/logo.png" alt="Logo SGGWmapka" class="h-16 w-16 object-contain drop-shadow-lg sm:h-20 sm:w-20">
+          </div>
+          <h1 class="font-serif text-3xl font-bold tracking-wide text-slate-900 sm:text-4xl">Rejestracja</h1>
+          <p class="mt-2 text-sm text-slate-500">Dołącz do społeczności SGGWmapka!</p>
+        </div>
+
+        <form [formGroup]="registerForm" (ngSubmit)="onRegister()" class="mt-6 flex flex-col gap-3">
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="mb-1 ml-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">Imię</label>
+              <input
+                type="text"
+                formControlName="firstName"
+                placeholder="np. Jan"
+                autocomplete="given-name"
+                class="login-input"
+                [ngClass]="{'input-error': registerForm.get('firstName')?.invalid && registerForm.get('firstName')?.touched}"
+              >
+              <p *ngIf="registerForm.get('firstName')?.hasError('required') && registerForm.get('firstName')?.touched" class="mt-1 ml-1 text-left text-xs text-red-500">Wymagane.</p>
+              <p *ngIf="registerForm.get('firstName')?.hasError('serverError')" class="mt-1 ml-1 text-left text-xs text-red-500">{{ registerForm.get('firstName')?.getError('serverError') }}</p>
+            </div>
+            <div>
+              <label class="mb-1 ml-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">Nazwisko</label>
+              <input
+                type="text"
+                formControlName="lastName"
+                placeholder="np. Kowalski"
+                autocomplete="family-name"
+                class="login-input"
+                [ngClass]="{'input-error': registerForm.get('lastName')?.invalid && registerForm.get('lastName')?.touched}"
+              >
+              <p *ngIf="registerForm.get('lastName')?.hasError('required') && registerForm.get('lastName')?.touched" class="mt-1 ml-1 text-left text-xs text-red-500">Wymagane.</p>
+              <p *ngIf="registerForm.get('lastName')?.hasError('serverError')" class="mt-1 ml-1 text-left text-xs text-red-500">{{ registerForm.get('lastName')?.getError('serverError') }}</p>
+            </div>
+          </div>
+
+          <div>
+            <label class="mb-1 ml-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">Login</label>
+            <input
+              type="text"
+              formControlName="username"
+              placeholder="np. jan.kowalski"
+              autocomplete="username"
+              class="login-input"
+              [ngClass]="{'input-error': registerForm.get('username')?.invalid && registerForm.get('username')?.touched}"
+            >
+            <p *ngIf="registerForm.get('username')?.hasError('required') && registerForm.get('username')?.touched" class="mt-1 ml-1 text-left text-xs text-red-500">Login jest wymagany.</p>
+            <p *ngIf="registerForm.get('username')?.hasError('serverError')" class="mt-1 ml-1 text-left text-xs text-red-500">{{ registerForm.get('username')?.getError('serverError') }}</p>
+          </div>
+
+          <div>
+            <label class="mb-1 ml-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">Email</label>
+            <input
+              type="email"
+              formControlName="email"
+              placeholder="np. jan@example.com"
+              autocomplete="email"
+              class="login-input"
+              [ngClass]="{'input-error': registerForm.get('email')?.invalid && registerForm.get('email')?.touched}"
+            >
+            <p *ngIf="registerForm.get('email')?.hasError('required') && registerForm.get('email')?.touched" class="mt-1 ml-1 text-left text-xs text-red-500">Email jest wymagany.</p>
+            <p *ngIf="registerForm.get('email')?.hasError('email') && registerForm.get('email')?.touched && !registerForm.get('email')?.hasError('serverError')" class="mt-1 ml-1 text-left text-xs text-red-500">Podaj poprawny adres email.</p>
+            <p *ngIf="registerForm.get('email')?.hasError('serverError')" class="mt-1 ml-1 text-left text-xs text-red-500">{{ registerForm.get('email')?.getError('serverError') }}</p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="mb-1 ml-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">Hasło</label>
+              <input
+                type="password"
+                formControlName="password"
+                placeholder="••••••••"
+                autocomplete="new-password"
+                class="login-input"
+                [ngClass]="{'input-error': registerForm.get('password')?.invalid && registerForm.get('password')?.touched}"
+              >
+              <p *ngIf="registerForm.get('password')?.hasError('required') && registerForm.get('password')?.touched" class="mt-1 ml-1 text-left text-xs text-red-500">Wymagane.</p>
+              <p *ngIf="registerForm.get('password')?.hasError('minlength') && registerForm.get('password')?.touched" class="mt-1 ml-1 text-left text-xs text-red-500">Min. 6 znaków.</p>
+              <p *ngIf="registerForm.get('password')?.hasError('serverError')" class="mt-1 ml-1 text-left text-xs text-red-500">{{ registerForm.get('password')?.getError('serverError') }}</p>
+            </div>
+            <div>
+              <label class="mb-1 ml-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">Powtórz hasło</label>
+              <input
+                type="password"
+                formControlName="confirmPassword"
+                placeholder="••••••••"
+                autocomplete="new-password"
+                class="login-input"
+                [ngClass]="{'input-error': registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched}"
+              >
+              <p *ngIf="registerForm.get('confirmPassword')?.hasError('required') && registerForm.get('confirmPassword')?.touched && !registerForm.get('confirmPassword')?.hasError('passwordMismatch')" class="mt-1 ml-1 text-left text-xs text-red-500">Wymagane.</p>
+              <p *ngIf="registerForm.get('confirmPassword')?.hasError('passwordMismatch') && registerForm.get('confirmPassword')?.touched" class="mt-1 ml-1 text-left text-xs text-red-500">Hasła się nie zgadzają.</p>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            [disabled]="isLoading"
+            class="login-btn mt-2"
+          >
+            <span *ngIf="!isLoading">Utwórz konto</span>
+            <span *ngIf="isLoading" class="inline-flex items-center gap-2">
+              <span class="spinner"></span>
+              Tworzenie konta...
+            </span>
+          </button>
+
+          <p *ngIf="errorMessage" class="mt-1 text-center text-sm text-red-600">{{ errorMessage }}</p>
+          <p *ngIf="successMessage" class="mt-1 text-center text-sm text-emerald-700">{{ successMessage }}</p>
+        </form>
+
+        <div class="mt-5 text-center text-sm">
+          <span class="text-slate-500">Masz już konto? </span>
+          <a routerLink="/login" class="font-semibold text-emerald-600 transition-colors hover:text-emerald-700">Wróć do logowania</a>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="campus-pane relative hidden overflow-hidden lg:flex lg:w-[54%]">
+
+      <div class="absolute inset-0">
+        <div
+          *ngFor="let slide of slides; let i = index"
+          class="slide"
+          [class.active]="i === currentSlide"
+          [attr.aria-hidden]="i !== currentSlide"
+        >
+          <div class="slide-bg" [style.background]="slide.gradient"></div>
+
+          <img
+            *ngIf="slide.imageOk"
+            [src]="slide.src"
+            [alt]="slide.title"
+            class="slide-img"
+            (error)="onImageError(slide)"
+            loading="lazy"
+          >
+
+          <div class="slide-overlay"></div>
+
+          <div class="slide-content">
+            <span class="slide-eyebrow">SGGW · Warszawa</span>
+            <h2 class="slide-title">{{ slide.title }}</h2>
+            <p class="slide-subtitle">{{ slide.subtitle }}</p>
+          </div>
+        </div>
       </div>
 
-      <div>
-        <input type="text" formControlName="lastName" placeholder="Nazwisko"
-          class="w-full h-11 rounded-full px-6 text-center text-gray-700 font-medium bg-white/90 shadow border transition-all placeholder:text-gray-400 placeholder:font-normal"
-          [ngClass]="{'border-red-500 focus:ring-red-200': registerForm.get('lastName')?.invalid && registerForm.get('lastName')?.touched, 'border-transparent focus:border-green-300 focus:ring-green-100': !(registerForm.get('lastName')?.invalid && registerForm.get('lastName')?.touched)}">
-        
-        <p *ngIf="registerForm.get('lastName')?.hasError('required') && registerForm.get('lastName')?.touched" class="text-red-500 text-xs mt-1 ml-4 text-left">Nazwisko jest wymagane.</p>
-        <p *ngIf="registerForm.get('lastName')?.hasError('serverError')" class="text-red-500 text-xs mt-1 ml-4 text-left">{{ registerForm.get('lastName')?.getError('serverError') }}</p>
-      </div>
-
-      <div>
-        <input type="text" formControlName="username" placeholder="Login"
-          class="w-full h-11 rounded-full px-6 text-center text-gray-700 font-medium bg-white/90 shadow border transition-all placeholder:text-gray-400 placeholder:font-normal"
-          [ngClass]="{'border-red-500 focus:ring-red-200': registerForm.get('username')?.invalid && registerForm.get('username')?.touched, 'border-transparent focus:border-green-300 focus:ring-green-100': !(registerForm.get('username')?.invalid && registerForm.get('username')?.touched)}">
-        
-        <p *ngIf="registerForm.get('username')?.hasError('required') && registerForm.get('username')?.touched" class="text-red-500 text-xs mt-1 ml-4 text-left">Login jest wymagany.</p>
-        <p *ngIf="registerForm.get('username')?.hasError('serverError')" class="text-red-500 text-xs mt-1 ml-4 text-left">{{ registerForm.get('username')?.getError('serverError') }}</p>
-      </div>
-
-      <div>
-        <input type="email" formControlName="email" placeholder="Email"
-          class="w-full h-11 rounded-full px-6 text-center text-gray-700 font-medium bg-white/90 shadow border transition-all placeholder:text-gray-400 placeholder:font-normal"
-          [ngClass]="{'border-red-500 focus:ring-red-200': registerForm.get('email')?.invalid && registerForm.get('email')?.touched, 'border-transparent focus:border-green-300 focus:ring-green-100': !(registerForm.get('email')?.invalid && registerForm.get('email')?.touched)}">
-        
-        <p *ngIf="registerForm.get('email')?.hasError('required') && registerForm.get('email')?.touched" class="text-red-500 text-xs mt-1 ml-4 text-left">Email jest wymagany.</p>
-        <p *ngIf="registerForm.get('email')?.hasError('email') && registerForm.get('email')?.touched && !registerForm.get('email')?.hasError('serverError')" class="text-red-500 text-xs mt-1 ml-4 text-left">Podaj poprawny adres email.</p>
-        <p *ngIf="registerForm.get('email')?.hasError('serverError')" class="text-red-500 text-xs mt-1 ml-4 text-left">{{ registerForm.get('email')?.getError('serverError') }}</p>
-      </div>
-
-      <div>
-        <input type="password" formControlName="password" placeholder="Hasło"
-          class="w-full h-11 rounded-full px-6 text-center text-gray-700 font-medium bg-white/90 shadow border transition-all placeholder:text-gray-400 placeholder:font-normal"
-          [ngClass]="{'border-red-500 focus:ring-red-200': registerForm.get('password')?.invalid && registerForm.get('password')?.touched, 'border-transparent focus:border-green-300 focus:ring-green-100': !(registerForm.get('password')?.invalid && registerForm.get('password')?.touched)}">
-        
-        <p *ngIf="registerForm.get('password')?.hasError('required') && registerForm.get('password')?.touched" class="text-red-500 text-xs mt-1 ml-4 text-left">Hasło jest wymagane.</p>
-        <p *ngIf="registerForm.get('password')?.hasError('minlength') && registerForm.get('password')?.touched" class="text-red-500 text-xs mt-1 ml-4 text-left">Hasło musi mieć min. 6 znaków.</p>
-        <p *ngIf="registerForm.get('password')?.hasError('serverError')" class="text-red-500 text-xs mt-1 ml-4 text-left">{{ registerForm.get('password')?.getError('serverError') }}</p>
-      </div>
-
-      <div>
-        <input type="password" formControlName="confirmPassword" placeholder="Powtórz hasło"
-          class="w-full h-11 rounded-full px-6 text-center text-gray-700 font-medium bg-white/90 shadow border transition-all placeholder:text-gray-400 placeholder:font-normal"
-          [ngClass]="{'border-red-500 focus:ring-red-200': registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched, 'border-transparent focus:border-green-300 focus:ring-green-100': !(registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched)}">
-        
-        <p *ngIf="registerForm.get('confirmPassword')?.hasError('required') && registerForm.get('confirmPassword')?.touched && !registerForm.get('confirmPassword')?.hasError('passwordMismatch')" class="text-red-500 text-xs mt-1 ml-4 text-left">Wymagane potwierdzenie hasła.</p>
-        <p *ngIf="registerForm.get('confirmPassword')?.hasError('passwordMismatch') && registerForm.get('confirmPassword')?.touched" class="text-red-500 text-xs mt-1 ml-4 text-left">Hasła nie są identyczne.</p>
-      </div>
-
-      <button type="submit" [disabled]="isLoading"
-        class="w-full h-11 mt-2 rounded-full px-6 text-center font-semibold bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-70 disabled:cursor-not-allowed transition-colors">
-        {{ isLoading ? 'Tworzenie konta...' : 'Utworz konto' }}
+      <button
+        type="button"
+        class="slide-nav slide-nav-prev"
+        (click)="prevSlide()"
+        aria-label="Poprzednie zdjęcie"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+      </button>
+      <button
+        type="button"
+        class="slide-nav slide-nav-next"
+        (click)="nextSlide()"
+        aria-label="Następne zdjęcie"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
       </button>
 
-      <p *ngIf="errorMessage" class="text-center text-red-600 text-sm mt-2">{{ errorMessage }}</p>
-      <p *ngIf="successMessage" class="text-center text-emerald-700 text-sm mt-2">{{ successMessage }}</p>
-    </form>
+      <div class="slide-dots">
+        <button
+          *ngFor="let slide of slides; let i = index"
+          type="button"
+          class="slide-dot"
+          [class.active]="i === currentSlide"
+          (click)="goToSlide(i)"
+          [attr.aria-label]="'Przejdź do slajdu ' + (i + 1)"
+        ></button>
+      </div>
 
-    <div class="mt-5 text-sm">
-      <span class="text-gray-500">Masz juz konto? </span>
-      <a routerLink="/login" class="text-emerald-500 font-semibold hover:text-emerald-600 transition-colors">Wroc do logowania</a>
-    </div>
+    </section>
+
   </div>
 </div>
