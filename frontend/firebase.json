@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "public": "dist/angular-project",
+    "public": "dist/angular-project/browser",
     "ignore": [
       "firebase.json",
       "**/.*",
