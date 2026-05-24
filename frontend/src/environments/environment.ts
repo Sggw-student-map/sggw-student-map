@@ -1,5 +1,5 @@
 export const environment = {
-  apiBaseUrl: 'https://sggw-student-map-515453688242.europe-west3.run.app',
+  apiBaseUrl: 'https://sggw-student-map-515453688242.europe-west3.run.app/api',
   authBaseUrl: 'https://sggw-student-map-515453688242.europe-west3.run.app/auth',
   /**
    * Swagger UI jest serwowany przez Spring Boot. Na `ng serve` (port 4200) ścieżki *.html, chmurowa wersja z frontu
