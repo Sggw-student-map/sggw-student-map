@@ -4,6 +4,9 @@ import { Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { TokenStorageService } from './token-storage.service';
 
+import { environment } from '../../environments/environment';
+
+
 export interface LoginRequest {
   username: string;
   password: string;
@@ -46,7 +49,7 @@ export class AuthService {
   }
 
   register(payload: RegisterRequest): Observable<unknown> {
-    return this.http.post('/users', payload);
+    return this.http.post(`${environment.authBaseUrl}/users`, payload);
   }
 
   refresh(): Observable<JwtResponse> {
