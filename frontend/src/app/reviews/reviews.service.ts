@@ -3,9 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Review } from './review.model';
 
+import { environment } from '../../environments/environment';
+
+
+
 @Injectable({ providedIn: 'root' })
 export class ReviewsService {
-  private apiUrl = '/api'; // Using relative path avoids CORS preflight 401 issues
+  private apiUrl = environment.apiBaseUrl;
 
   constructor(private http: HttpClient) {}
 
