@@ -11,10 +11,13 @@ public class PlaceSecurityRules implements SecurityRules {
     @Override
     public void configure(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry registry) {
         registry
+                // odczyt publiczny - mapa ma dzialac dla anonimow
                 .requestMatchers(HttpMethod.GET, "/api/places", "/api/places/**").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/api/places", "/api/places/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/places").authenticated()
-                .requestMatchers(HttpMethod.PUT, "/api/places/**").authenticated()
-                .requestMatchers(HttpMethod.DELETE, "/api/places/**").authenticated();
+                // tworzenie i usuwanie miejsc - tylko ADMIN
+                .requestMatchers(HttpMethod.POST, "/api/places").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/places/**").hasRole("ADMIN")
+                // edycja miejsc - ADMIN lub APPROVER
+                .requestMatchers(HttpMethod.PUT, "/api/places/**").hasAnyRole("ADMIN", "APPROVER");
     }
 }

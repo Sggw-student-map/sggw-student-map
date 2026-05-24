@@ -1,6 +1,7 @@
 package com.gwozdz1uuu.sggwstudentmap.auth.jwt;
 
 import lombok.AllArgsConstructor;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -34,10 +35,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
+        // przepisanie roszczenia "role" na ROLE_<NAME> -> dziala z hasRole/hasAnyRole
+        var authority = new SimpleGrantedAuthority("ROLE_" + jwt.getRole().name());
         var authentication = new UsernamePasswordAuthenticationToken(
                 jwt.getUserId(),
                 null,
-                List.of()
+                List.of(authority)
         );
         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 

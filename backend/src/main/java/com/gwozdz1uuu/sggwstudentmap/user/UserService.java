@@ -2,6 +2,7 @@ package com.gwozdz1uuu.sggwstudentmap.user;
 
 import com.gwozdz1uuu.sggwstudentmap.settings.UserSettings;
 import com.gwozdz1uuu.sggwstudentmap.settings.UserSettingsRepository;
+import com.gwozdz1uuu.sggwstudentmap.user.role.UserRoleService;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserSettingsRepository userSettingsRepository;
+    private final UserRoleService userRoleService;
 
     // repozytorium i serwis mailowy
     private final com.gwozdz1uuu.sggwstudentmap.repository.UserVerificationTokenRepository tokenRepository;
@@ -50,6 +52,9 @@ public class UserService {
         user.setIsActive(false);
 
         var saved = userRepository.save(user);
+
+        // kazdy nowy uzytkownik dostaje role USER; ADMIN/APPROVER nadawane recznie w DB
+        userRoleService.assignDefaultRole(saved);
 
         UserSettings settings = new UserSettings();
         settings.setIdUser(saved.getId());

@@ -31,6 +31,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Secrets ###
+.env
+backend/.env
 backend/mvnw
 # backend/schemaspy-output/
 # schemaspy-output/
