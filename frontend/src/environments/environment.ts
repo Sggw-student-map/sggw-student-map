@@ -1,4 +1,5 @@
 export const environment = {
+  baseUrl: 'https://sggw-student-map-515453688242.europe-west3.run.app',
   apiBaseUrl: 'https://sggw-student-map-515453688242.europe-west3.run.app/api',
   authBaseUrl: 'https://sggw-student-map-515453688242.europe-west3.run.app/auth',
   /**

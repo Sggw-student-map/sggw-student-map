@@ -48,7 +48,7 @@ export class AuthService {
   }
 
   register(payload: RegisterRequest): Observable<unknown> {
-    return this.http.post(`${environment.authBaseUrl}/users`, payload);
+    return this.http.post(`${environment.baseUrl}/users`, payload);
   }
 
   refresh(): Observable<JwtResponse> {
