@@ -4,8 +4,11 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
+import java.util.List;
 import java.time.LocalDateTime;
 
 @Entity
@@ -42,4 +45,9 @@ public class FeedPost {
             createdAt = LocalDateTime.now();
         }
     }
+
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @OneToMany(mappedBy = "feedPost", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FeedPostUrl> urls;
 }

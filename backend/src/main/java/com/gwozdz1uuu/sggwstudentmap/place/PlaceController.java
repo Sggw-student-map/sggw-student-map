@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -44,12 +45,14 @@ public class PlaceController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Place> createPlace(@Valid @RequestBody CreatePlaceRequest request) {
         Place created = placeService.createPlace(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','APPROVER')")
     public ResponseEntity<Place> updatePlace(@PathVariable Integer id,
                                              @Valid @RequestBody CreatePlaceRequest request) {
         return placeService.updatePlace(id, request)
@@ -58,6 +61,7 @@ public class PlaceController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deletePlace(@PathVariable Integer id) {
         if (placeService.deletePlace(id)) {
             return ResponseEntity.noContent().build();
