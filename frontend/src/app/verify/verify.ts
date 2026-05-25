@@ -3,6 +3,8 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 
+import { environment } from '../../environments/environment';
+
 @Component({
   selector: 'app-verify',
   standalone: true,
@@ -30,7 +32,7 @@ export class Verify implements OnInit {
   }
 
   verifyAccount(token: string): void {
-    this.http.get(`http://localhost:8080/auth/confirm?token=${token}`, { responseType: 'text' })
+    this.http.get(`${environment.authBaseUrl}/confirm?token=${token}`, { responseType: 'text' })
       .subscribe({
         next: (response) => {
           this.status = 'success';
