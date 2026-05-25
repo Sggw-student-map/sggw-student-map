@@ -94,6 +94,7 @@ public class DatabaseSeeder {
     //  - kazdy user bez wiersza dostaje USER
     //  - jkowalski -> ADMIN (konto testowe do tworzenia/usuwania miejsc)
     //  - anowak    -> APPROVER (konto testowe do edycji miejsc)
+
     private static void seedUserRoles(Connection conn) throws SQLException {
         // 1) backfill: USER dla wszystkich uzytkownikow bez wiersza
         String backfillSql = """
