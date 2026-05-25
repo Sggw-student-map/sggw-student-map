@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Entity
 @Table(name = "places")
 @Data
@@ -28,4 +30,7 @@ public class Place {
 
     @Column(name = "description", length = 1000)
     private String description;
+
+    @OneToMany(mappedBy = "place", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PlaceUrl> urls;
 }

@@ -38,6 +38,7 @@ public class DatabaseSeeder {
             System.out.println("Connected to Neon database.");
 
             seedUsers(conn);
+            seedUserRoles(conn);
             seedPlaces(conn);
             seedFriendships(conn);
             seedEvents(conn);
@@ -85,6 +86,51 @@ public class DatabaseSeeder {
             ps.executeBatch();
         }
         System.out.println("  ✓ users");
+    }
+
+    // ── User Roles ────────────────────────────────────────────────────────
+    // Tabela user_roles jest tworzona przez Hibernate (ddl-auto=update) na podstawie
+    // encji UserRole. Tutaj tylko backfill dla seedowanych uzytkownikow:
+    //  - kazdy user bez wiersza dostaje USER
+    //  - jkowalski -> ADMIN (konto testowe do tworzenia/usuwania miejsc)
+    //  - anowak    -> APPROVER (konto testowe do edycji miejsc)
+
+    private static void seedUserRoles(Connection conn) throws SQLException {
+        // 1) backfill: USER dla wszystkich uzytkownikow bez wiersza
+        String backfillSql = """
+                INSERT INTO user_roles (user_id, role)
+                SELECT u.id, 'USER'
+                FROM users u
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM user_roles ur WHERE ur.user_id = u.id
+                )
+                """;
+
+        try (PreparedStatement ps = conn.prepareStatement(backfillSql)) {
+            ps.executeUpdate();
+        }
+
+        // 2) promocja konkretnych kont po username
+        String promoteSql = """
+                UPDATE user_roles
+                SET role = ?
+                WHERE user_id = (SELECT id FROM users WHERE username = ?)
+                """;
+
+        Object[][] promotions = {
+            {"ADMIN",    "jkowalski"},
+            {"APPROVER", "anowak"},
+        };
+
+        try (PreparedStatement ps = conn.prepareStatement(promoteSql)) {
+            for (Object[] p : promotions) {
+                ps.setString(1, (String) p[0]);
+                ps.setString(2, (String) p[1]);
+                ps.addBatch();
+            }
+            ps.executeBatch();
+        }
+        System.out.println("  ✓ user_roles");
     }
 
     // ── Places ────────────────────────────────────────────────────────────

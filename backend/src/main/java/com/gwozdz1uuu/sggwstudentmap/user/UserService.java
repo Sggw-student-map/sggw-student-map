@@ -2,6 +2,7 @@ package com.gwozdz1uuu.sggwstudentmap.user;
 
 import com.gwozdz1uuu.sggwstudentmap.settings.UserSettings;
 import com.gwozdz1uuu.sggwstudentmap.settings.UserSettingsRepository;
+import com.gwozdz1uuu.sggwstudentmap.user.role.UserRoleService;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserSettingsRepository userSettingsRepository;
+    private final UserRoleService userRoleService;
 
     // repozytorium i serwis mailowy
     private final com.gwozdz1uuu.sggwstudentmap.repository.UserVerificationTokenRepository tokenRepository;
@@ -47,19 +49,22 @@ public class UserService {
         user.setUsername(request.username());
         user.setEmail(request.email());
         user.setPassword(passwordEncoder.encode(request.password()));
-        user.setIsActive(false);
+        // TODO: przywrocic weryfikacje emailem - chwilowo pomijamy
+        user.setIsActive(true);
 
         var saved = userRepository.save(user);
+
+        // kazdy nowy uzytkownik dostaje role USER; ADMIN/APPROVER nadawane recznie w DB
+        userRoleService.assignDefaultRole(saved);
 
         UserSettings settings = new UserSettings();
         settings.setIdUser(saved.getId());
         userSettingsRepository.save(settings);
 
-        String token = java.util.UUID.randomUUID().toString();
-        UserVerificationToken verificationToken = new UserVerificationToken(token, saved);
-        tokenRepository.save(verificationToken);
-
-        emailService.sendVerificationEmail(saved.getEmail(), token);
+//        String token = java.util.UUID.randomUUID().toString();
+//        UserVerificationToken verificationToken = new UserVerificationToken(token, saved);
+//        tokenRepository.save(verificationToken);
+//        emailService.sendVerificationEmail(saved.getEmail(), token);
 
         return UserResponse.from(saved);
     }

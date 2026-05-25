@@ -1,6 +1,7 @@
 package com.gwozdz1uuu.sggwstudentmap.auth.jwt;
 
 import com.gwozdz1uuu.sggwstudentmap.user.User;
+import com.gwozdz1uuu.sggwstudentmap.user.role.UserRoleService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -15,6 +16,7 @@ import java.util.Date;
 @AllArgsConstructor
 public class JwtService {
     private final JwtConfig jwtConfig;
+    private final UserRoleService userRoleService;
 
     public Jwt generateAccessToken(User user) {
         return generateToken(user, jwtConfig.getAccessTokenExpiration());
@@ -25,10 +27,12 @@ public class JwtService {
     }
 
     private Jwt generateToken(User user, long tokenExpiration) {
+        var role = userRoleService.getRole(user.getId());
         var claims = Jwts.claims()
                 .subject(user.getId().toString())
-                .add("email",user.getEmail())
-                .add("name",user.getUsername())
+                .add("email", user.getEmail())
+                .add("name", user.getUsername())
+                .add(Jwt.ROLE_CLAIM, role.name())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + 1000 * tokenExpiration))
                 .build();
