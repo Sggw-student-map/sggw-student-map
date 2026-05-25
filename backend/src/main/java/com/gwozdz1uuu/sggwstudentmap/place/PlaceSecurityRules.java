@@ -13,8 +13,12 @@ public class PlaceSecurityRules implements SecurityRules {
         registry
                 .requestMatchers(HttpMethod.GET, "/api/places", "/api/places/**").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/api/places", "/api/places/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/places").authenticated()
-                .requestMatchers(HttpMethod.PUT, "/api/places/**").authenticated()
-                .requestMatchers(HttpMethod.DELETE, "/api/places/**").authenticated();
+                .requestMatchers(HttpMethod.POST, "/api/places").authenticated() //.hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/places/**").authenticated() //.hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/places/**").authenticated() //.hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/places/pending").authenticated() //.hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/places/pending/*/approve").authenticated() //.hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/places/pending/*/reject").authenticated(); //.hasRole("ADMIN")
+        // gdy role będą gotowe: zamień authenticated() na hasRole("ADMIN")
     }
 }
