@@ -27,7 +27,13 @@
             "styles": [
               "src/styles.css",
               "node_modules/leaflet/dist/leaflet.css"
-            ]
+            ],
+            "loader": {
+              ".jpg": "file",
+              ".jpeg": "file",
+              ".png": "file",
+              ".webp": "file"
+            }
           },
           "configurations": {
             "production": {
@@ -40,7 +46,7 @@
                 {
                   "type": "anyComponentStyle",
                   "maximumWarning": "4kB",
-                  "maximumError": "8kB"
+                  "maximumError": "40kB"
                 }
               ],
               "outputHashing": "all"
@@ -87,7 +93,13 @@
             ],
             "styles": [
               "src/styles.css"
-            ]
+            ],
+            "loader": {
+              ".jpg": "file",
+              ".jpeg": "file",
+              ".png": "file",
+              ".webp": "file"
+            }
           }
         }
       }

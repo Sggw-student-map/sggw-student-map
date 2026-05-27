@@ -41,7 +41,7 @@ public class User {
     private LocalDateTime updatedAt;
 
     @Column(name = "is_active")
-    private Boolean isActive = true;
+    private Boolean isActive = false;
 
     @PrePersist
     protected void onCreate() {
@@ -53,4 +53,5 @@ public class User {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
 }

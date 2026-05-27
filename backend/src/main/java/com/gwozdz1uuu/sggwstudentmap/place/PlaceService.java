@@ -135,6 +135,20 @@ public class PlaceService {
         return placePendingRepository.save(pending);
     }
 
+    public void requestUpdatePlace(Integer placeId, CreatePlaceRequest request, Integer userId) {
+        PlacePending pending = new PlacePending();
+        pending.setActionType(PendingActionType.UPDATE);
+        pending.setPlaceId(placeId);
+        pending.setName(request.getName());
+        pending.setDescription(request.getDescription());
+        pending.setLatitude(request.getLatitude());
+        pending.setLongitude(request.getLongitude());
+        pending.setRequestedByUserId(userId);
+        pending.setStatus(PendingStatus.PENDING);
+        pending.setCreatedAt(LocalDateTime.now());
+        placePendingRepository.save(pending);
+    }
+
     public void approvePending(Integer pendingId) {
         PlacePending pending = placePendingRepository.findById(pendingId)
                 .orElseThrow(() -> new RuntimeException("Pending not found"));
@@ -148,6 +162,14 @@ public class PlaceService {
             placeRepository.save(place);
         } else if (pending.getActionType() == PendingActionType.DELETE) {
             placeRepository.deleteById(pending.getPlaceId());
+        } else if (pending.getActionType() == PendingActionType.UPDATE) {
+            placeRepository.findById(pending.getPlaceId()).ifPresent(place -> {
+                place.setName(pending.getName());
+                place.setDescription(pending.getDescription());
+                place.setLatitude(pending.getLatitude());
+                place.setLongitude(pending.getLongitude());
+                placeRepository.save(place);
+            });
         }
 
         pending.setStatus(PendingStatus.APPROVED);

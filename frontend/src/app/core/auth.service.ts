@@ -1,8 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
-import { environment } from '../../environments/environment';
 import { TokenStorageService } from './token-storage.service';
+
+import { environment } from '../../environments/environment';
+
 
 export interface LoginRequest {
   username: string;
@@ -46,7 +48,7 @@ export class AuthService {
   }
 
   register(payload: RegisterRequest): Observable<unknown> {
-    return this.http.post('/users', payload);
+    return this.http.post(`${environment.baseUrl}/users`, payload);
   }
 
   refresh(): Observable<JwtResponse> {

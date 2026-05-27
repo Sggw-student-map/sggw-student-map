@@ -52,7 +52,7 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
   deleting = false;
 
   showPendingMessage = false;
-  isAdmin = false; ///user?.roles?.includes('ADMIN') ?? false;
+  canApprovePlaces = false;
   pendingPlaces: any[] = [];
 
   locating = false;
@@ -155,8 +155,8 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
     });
 
     this.userState.user$.subscribe((user: any) => {
-      this.isAdmin = true;//user?.roles?.includes('ADMIN') ?? false;
-      if (this.isAdmin) {
+      this.canApprovePlaces = user?.role === 'ADMIN' || user?.role === 'APPROVER';
+      if (this.canApprovePlaces) {
         this.loadPendingPlaces();
       }
     });
@@ -719,7 +719,7 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
           this.markerMap[pin.id] = marker;
         });
 
-        if (this.isAdmin && this.pendingPlaces.length > 0) {
+        if (this.canApprovePlaces && this.pendingPlaces.length > 0) {
           this.pendingPlaces.forEach((pending: any) => {
             const lat = pending.actionType === 'ADD' ? pending.latitude : null;
             const lng = pending.actionType === 'ADD' ? pending.longitude : null;
@@ -730,9 +730,8 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
             const finalLng = lng ?? existingPin?.longitude;
             if (!finalLat || !finalLng) return;
 
-            const pendingIcon = L.divIcon({
-              className: pending.actionType === 'ADD' ? 'pending-add-marker' : 'pending-delete-marker',
-              html: `<div class="${pending.actionType === 'ADD' ? 'pending-add-marker' : 'pending-delete-marker'}"></div>`,
+            const pendingIcon = L.icon({
+              iconUrl: pending.actionType === 'ADD' ? '/orange-mark.svg' : '/transparent-mark.svg',
               iconSize: [25, 41],
               iconAnchor: [12, 41],
               popupAnchor: [1, -34],

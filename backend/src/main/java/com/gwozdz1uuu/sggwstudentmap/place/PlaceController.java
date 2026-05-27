@@ -4,7 +4,7 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
@@ -48,9 +48,8 @@ public class PlaceController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createPlace(
-            @Valid @RequestBody CreatePlaceRequest request,
-            Authentication auth) {
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> createPlace(@Valid @RequestBody CreatePlaceRequest request) {
         var user = authService.getCurrentUser();
         placeService.requestAddPlace(request, user.getId());
         return ResponseEntity.accepted()
@@ -58,17 +57,18 @@ public class PlaceController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Place> updatePlace(@PathVariable Integer id,
-                                             @Valid @RequestBody CreatePlaceRequest request) {
-        return placeService.updatePlace(id, request)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> updatePlace(@PathVariable Integer id,
+                                        @Valid @RequestBody CreatePlaceRequest request) {
+        var user = authService.getCurrentUser();
+        placeService.requestUpdatePlace(id, request, user.getId());
+        return ResponseEntity.accepted()
+                .body(Map.of("message", "Zgłoszenie edycji dodane do zatwierdzenia"));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deletePlace(
-            @PathVariable Integer id,
-            Authentication auth) {
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> deletePlace(@PathVariable Integer id) {
         var user = authService.getCurrentUser();
         placeService.requestDeletePlace(id, user.getId());
         return ResponseEntity.accepted()

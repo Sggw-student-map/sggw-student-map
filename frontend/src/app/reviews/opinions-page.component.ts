@@ -6,6 +6,11 @@ import { HttpClient } from '@angular/common/http';
 import { ReviewsService } from './reviews.service';
 import { Review } from './review.model';
 
+import { environment } from '../../environments/environment';
+
+
+
+
 export interface ReviewVM {
   id: number;
   author: string;
@@ -84,7 +89,7 @@ export class OpinionsPageComponent implements OnInit {
   }
 
   loadPlaces(): void {
-    this.http.get<Place[]>('/api/places').subscribe(data => {
+    this.http.get<Place[]>(`${environment.apiBaseUrl}/places`).subscribe(data => {
       this.places = data;
     });
   }

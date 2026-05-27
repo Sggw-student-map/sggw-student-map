@@ -1,48 +1,143 @@
-<div class="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-tr from-green-100 via-yellow-50 to-pink-100 relative overflow-hidden">
+<div class="login-page relative min-h-screen w-full overflow-hidden bg-gradient-to-tr from-emerald-50 via-yellow-50 to-pink-100">
 
-  <div class="z-10 flex flex-col items-center">
-    
-    <div class="mb-4">
-      <img src="/logo.png" alt="Logo SGGWmapka" class="w-32 h-32 object-contain drop-shadow-lg">
-    </div>
+  <div class="login-bg pointer-events-none absolute inset-0">
+    <span class="blob blob-1"></span>
+    <span class="blob blob-2"></span>
+    <span class="blob blob-3"></span>
+    <span class="grid-overlay"></span>
+  </div>
 
-    <h1 class="text-4xl font-serif font-bold text-black tracking-wide mb-8">
-      SGGWmapka
-    </h1>
+  <div class="relative z-10 flex min-h-screen w-full flex-col lg:flex-row">
 
-    <div class="flex flex-col gap-4 w-64">
-      
-      <input 
-        type="text" 
-        placeholder="Login" 
-        #usernameInput
-        class="w-full h-12 rounded-full px-6 text-center text-gray-700 font-medium bg-white/90 shadow-[0_4px_10px_rgba(0,0,0,0.05)] border border-transparent focus:outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100 transition-all placeholder:text-gray-400 placeholder:font-normal"
-      >
+    <section class="flex w-full items-center justify-center px-6 py-10 sm:px-10 lg:w-[46%] lg:px-16">
+      <div class="glass-card w-full max-w-md">
 
-      <input 
-        type="password" 
-        placeholder="Hasło" 
-        #passwordInput
-        (keyup.enter)="onLogin(usernameInput.value, passwordInput.value)"
-        class="w-full h-12 rounded-full px-6 text-center text-gray-700 font-medium bg-white/90 shadow-[0_4px_10px_rgba(0,0,0,0.05)] border border-transparent focus:outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100 transition-all placeholder:text-gray-400 placeholder:font-normal"
-      >
+        <div class="flex flex-col items-center text-center">
+          <div class="logo-wrap mb-3">
+            <img src="/logo.png" alt="Logo SGGWmapka" class="h-20 w-20 object-contain drop-shadow-lg sm:h-24 sm:w-24">
+          </div>
+          <h1 class="font-serif text-3xl font-bold tracking-wide text-slate-900 sm:text-4xl">SGGWmapka</h1>
+          <p class="mt-2 text-sm text-slate-500">Witaj ponownie! Zaloguj się, aby kontynuować.</p>
+        </div>
+
+        <form [formGroup]="loginForm" (ngSubmit)="onLogin()" class="mt-8 flex flex-col gap-4">
+
+          <div>
+            <label class="mb-1 ml-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">Login</label>
+            <input
+              type="text"
+              formControlName="username"
+              placeholder="np. jan.kowalski"
+              autocomplete="username"
+              class="login-input"
+              [ngClass]="{'input-error': loginForm.get('username')?.invalid && loginForm.get('username')?.touched}"
+            >
+            <p *ngIf="loginForm.get('username')?.hasError('required') && loginForm.get('username')?.touched" class="mt-1 ml-1 text-left text-xs text-red-500">
+              Login jest wymagany.
+            </p>
+          </div>
+
+          <div>
+            <label class="mb-1 ml-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">Hasło</label>
+            <input
+              type="password"
+              formControlName="password"
+              placeholder="••••••••"
+              autocomplete="current-password"
+              class="login-input"
+              [ngClass]="{'input-error': loginForm.get('password')?.invalid && loginForm.get('password')?.touched}"
+            >
+            <p *ngIf="loginForm.get('password')?.hasError('required') && loginForm.get('password')?.touched" class="mt-1 ml-1 text-left text-xs text-red-500">
+              Hasło jest wymagane.
+            </p>
+          </div>
+
+          <button
+            type="submit"
+            [disabled]="isLoading"
+            class="login-btn mt-2"
+          >
+            <span *ngIf="!isLoading">Zaloguj</span>
+            <span *ngIf="isLoading" class="inline-flex items-center gap-2">
+              <span class="spinner"></span>
+              Logowanie...
+            </span>
+          </button>
+
+          <p *ngIf="errorMessage" class="mt-1 text-center text-sm text-red-600">{{ errorMessage }}</p>
+        </form>
+
+        <div class="mt-6 text-center text-sm">
+          <span class="text-slate-500">Nie masz konta? </span>
+          <a routerLink="/register" class="font-semibold text-emerald-600 transition-colors hover:text-emerald-700">Zarejestruj się!</a>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="campus-pane relative hidden overflow-hidden lg:flex lg:w-[54%]">
+
+      <div class="absolute inset-0">
+        <div
+          *ngFor="let slide of slides; let i = index"
+          class="slide"
+          [class.active]="i === currentSlide"
+          [attr.aria-hidden]="i !== currentSlide"
+        >
+          <div class="slide-bg" [style.background]="slide.gradient"></div>
+
+          <img
+            *ngIf="slide.imageOk"
+            [src]="slide.src"
+            [alt]="slide.title"
+            class="slide-img"
+            (error)="onImageError(slide)"
+            loading="lazy"
+          >
+
+          <div class="slide-overlay"></div>
+
+          <div class="slide-content">
+            <span class="slide-eyebrow">SGGW · Warszawa</span>
+            <h2 class="slide-title">{{ slide.title }}</h2>
+            <p class="slide-subtitle">{{ slide.subtitle }}</p>
+          </div>
+        </div>
+      </div>
 
       <button
         type="button"
-        (click)="onLogin(usernameInput.value, passwordInput.value)"
-        [disabled]="isLoading"
-        class="w-full h-12 rounded-full px-6 text-center font-semibold bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
+        class="slide-nav slide-nav-prev"
+        (click)="prevSlide()"
+        aria-label="Poprzednie zdjęcie"
       >
-        {{ isLoading ? 'Logowanie...' : 'Zaloguj' }}
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+      </button>
+      <button
+        type="button"
+        class="slide-nav slide-nav-next"
+        (click)="nextSlide()"
+        aria-label="Następne zdjęcie"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
       </button>
 
-      <p *ngIf="errorMessage" class="text-center text-red-600 text-sm">{{ errorMessage }}</p>
-    </div>
+      <div class="slide-dots">
+        <button
+          *ngFor="let slide of slides; let i = index"
+          type="button"
+          class="slide-dot"
+          [class.active]="i === currentSlide"
+          (click)="goToSlide(i)"
+          [attr.aria-label]="'Przejdź do slajdu ' + (i + 1)"
+        ></button>
+      </div>
 
-    <div class="mt-6 text-sm">
-      <span class="text-gray-500">Nie masz konta? </span>
-      <a routerLink="/register" class="text-emerald-500 font-semibold hover:text-emerald-600 transition-colors">Zarejestruj się!</a>
-    </div>
+    </section>
 
   </div>
 </div>
