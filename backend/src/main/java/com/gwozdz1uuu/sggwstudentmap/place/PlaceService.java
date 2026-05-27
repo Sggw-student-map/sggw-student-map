@@ -4,6 +4,7 @@ import com.gwozdz1uuu.sggwstudentmap.review.ReviewRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -16,6 +17,7 @@ public class PlaceService {
 
     private final PlaceRepository placeRepository;
     private final ReviewRepository reviewRepository;
+    private final PlacePendingRepository placePendingRepository;    
 
     public List<PlaceResponse> getAllPlaces() {
         return getAllPlaces(PlaceSortOption.RECENT, null, false, null);
@@ -112,4 +114,78 @@ public class PlaceService {
             );
         });
     }
+
+    public PlacePending requestAddPlace(CreatePlaceRequest request, Integer userId) {
+        PlacePending pending = new PlacePending();
+        pending.setName(request.getName());
+        pending.setLatitude(request.getLatitude());
+        pending.setLongitude(request.getLongitude());
+        pending.setDescription(request.getDescription());
+        pending.setActionType(PendingActionType.ADD);
+        pending.setRequestedByUserId(userId);
+        // status domyślnie PENDING z encji
+        return placePendingRepository.save(pending);
+    }
+
+    public PlacePending requestDeletePlace(Integer placeId, Integer userId) {
+        PlacePending pending = new PlacePending();
+        pending.setPlaceId(placeId);
+        pending.setActionType(PendingActionType.DELETE);
+        pending.setRequestedByUserId(userId);
+        return placePendingRepository.save(pending);
+    }
+
+    public void requestUpdatePlace(Integer placeId, CreatePlaceRequest request, Integer userId) {
+        PlacePending pending = new PlacePending();
+        pending.setActionType(PendingActionType.UPDATE);
+        pending.setPlaceId(placeId);
+        pending.setName(request.getName());
+        pending.setDescription(request.getDescription());
+        pending.setLatitude(request.getLatitude());
+        pending.setLongitude(request.getLongitude());
+        pending.setRequestedByUserId(userId);
+        pending.setStatus(PendingStatus.PENDING);
+        pending.setCreatedAt(LocalDateTime.now());
+        placePendingRepository.save(pending);
+    }
+
+    public void approvePending(Integer pendingId) {
+        PlacePending pending = placePendingRepository.findById(pendingId)
+                .orElseThrow(() -> new RuntimeException("Pending not found"));
+
+        if (pending.getActionType() == PendingActionType.ADD) {
+            Place place = new Place();
+            place.setName(pending.getName());
+            place.setLatitude(pending.getLatitude());
+            place.setLongitude(pending.getLongitude());
+            place.setDescription(pending.getDescription());
+            placeRepository.save(place);
+        } else if (pending.getActionType() == PendingActionType.DELETE) {
+            placeRepository.deleteById(pending.getPlaceId());
+        } else if (pending.getActionType() == PendingActionType.UPDATE) {
+            placeRepository.findById(pending.getPlaceId()).ifPresent(place -> {
+                place.setName(pending.getName());
+                place.setDescription(pending.getDescription());
+                place.setLatitude(pending.getLatitude());
+                place.setLongitude(pending.getLongitude());
+                placeRepository.save(place);
+            });
+        }
+
+        pending.setStatus(PendingStatus.APPROVED);
+        pending.setResolvedAt(LocalDateTime.now());
+        placePendingRepository.save(pending);
+    }
+
+    public void rejectPending(Integer pendingId) {
+        PlacePending pending = placePendingRepository.findById(pendingId)
+                .orElseThrow(() -> new RuntimeException("Pending not found"));
+        pending.setStatus(PendingStatus.REJECTED);
+        pending.setResolvedAt(LocalDateTime.now());
+        placePendingRepository.save(pending);
+    }
+
+    public List<PlacePending> getPendingByStatus(PendingStatus status) {
+        return placePendingRepository.findByStatusOrderByCreatedAtDesc(status);
+}
 }

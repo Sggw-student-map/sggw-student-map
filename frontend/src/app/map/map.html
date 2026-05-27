@@ -341,6 +341,14 @@
       </div>
     </div>
 
+    <!-- Pending message toast -->
+    <div *ngIf="showPendingMessage"
+        class="absolute top-24 left-1/2 -translate-x-1/2 pointer-events-auto z-[850]">
+      <div class="bg-white/90 backdrop-blur-md rounded-2xl shadow-xl border border-green-200 px-5 py-2.5 text-sm text-green-700 font-medium">
+        ✓ Zgłoszenie wysłane — czeka na zatwierdzenie admina
+      </div>
+    </div>
+
     <!-- Place creation form -->
     <div *ngIf="showPlaceForm"
          class="absolute bottom-8 left-1/2 -translate-x-1/2 pointer-events-auto w-full max-w-md px-4 z-[800]">
