@@ -730,8 +730,9 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
             const finalLng = lng ?? existingPin?.longitude;
             if (!finalLat || !finalLng) return;
 
-            const pendingIcon = L.icon({
-              iconUrl: pending.actionType === 'ADD' ? '/orange-mark.svg' : '/transparent-mark.svg',
+            const pendingIcon = L.divIcon({
+              className: 'pending-marker',
+              html: `<img src="${pending.actionType === 'ADD' ? '/orange-mark.svg' : '/transparent-mark.svg'}" width="25" height="41" />`,
               iconSize: [25, 41],
               iconAnchor: [12, 41],
               popupAnchor: [1, -34],
