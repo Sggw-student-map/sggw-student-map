@@ -5,5 +5,6 @@ export interface Review {
   rating: number;
   comment: string;
   author?: string;
+  image_url?: string;
   created_at?: string;
 }

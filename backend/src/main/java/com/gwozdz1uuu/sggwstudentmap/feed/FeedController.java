@@ -3,8 +3,10 @@ package com.gwozdz1uuu.sggwstudentmap.feed;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -29,9 +31,11 @@ public class FeedController {
         return ResponseEntity.ok(feedService.getFeed(page, size));
     }
 
-    @PostMapping
-    public ResponseEntity<FeedPostResponse> createPost(@Valid @RequestBody CreatePostRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(feedService.createPost(request));
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<FeedPostResponse> createPost(
+            @Valid @RequestPart("post") CreatePostRequest request,
+            @RequestPart(value = "image", required = false) MultipartFile image) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(feedService.createPost(request, image));
     }
 
     @DeleteMapping("/{postId}")

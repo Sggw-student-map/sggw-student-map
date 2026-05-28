@@ -1,10 +1,13 @@
 package com.gwozdz1uuu.sggwstudentmap.review;
 
 import com.gwozdz1uuu.sggwstudentmap.auth.AuthService;
+import com.gwozdz1uuu.sggwstudentmap.storage.StorageService;
 import com.gwozdz1uuu.sggwstudentmap.user.User;
 import com.gwozdz1uuu.sggwstudentmap.user.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -15,6 +18,7 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final AuthService authService;
     private final UserRepository userRepository;
+    private final StorageService storageService;
 
     public List<Review> getAllReviews() {
         List<Review> reviews = reviewRepository.findAll();
@@ -38,7 +42,8 @@ public class ReviewService {
         return reviews;
     }
 
-    public Review addReview(Integer placeId, Review review) {
+    @Transactional
+    public Review addReview(Integer placeId, Review review, MultipartFile image) {
         User currentUser = authService.getCurrentUser();
         if (currentUser == null) {
             throw new org.springframework.security.access.AccessDeniedException("User must be authenticated to add a review");
@@ -46,7 +51,17 @@ public class ReviewService {
         review.setPlaceId(placeId);
         review.setUserId(currentUser.getId());
         review.setAuthor(currentUser.getFirstName() + " " + currentUser.getLastName());
-        return reviewRepository.save(review);
+        review.setImageUrl(null);
+
+        Review saved = reviewRepository.save(review);
+
+        if (image != null && !image.isEmpty()) {
+            String imageUrl = storageService.upload(image, "reviews", saved.getId());
+            saved.setImageUrl(imageUrl);
+            reviewRepository.save(saved);
+        }
+
+        return saved;
     }
 
     private void populateAuthors(List<Review> reviews) {

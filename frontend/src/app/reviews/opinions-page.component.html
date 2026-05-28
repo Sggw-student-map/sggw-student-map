@@ -37,8 +37,9 @@
 
       <div class="card-body">
         <div class="place-thumb">
-          <img *ngIf="review.placeImage" [src]="review.placeImage" alt="" />
-          <div *ngIf="!review.placeImage" class="thumb-placeholder"></div>
+          <img *ngIf="review.imageUrl" [src]="review.imageUrl" alt="zdjęcie opinii" />
+          <img *ngIf="!review.imageUrl && review.placeImage" [src]="review.placeImage" alt="" />
+          <div *ngIf="!review.imageUrl && !review.placeImage" class="thumb-placeholder"></div>
         </div>
         <div class="review-body">
           <p class="place-name">{{ getPlaceName(review.placeId) }}</p>
@@ -73,6 +74,15 @@
     <textarea [(ngModel)]="modalComment"
               placeholder="Napisz opinię o tym miejscu..."
               rows="3"></textarea>
+
+    <div class="form-group" style="margin-top:10px">
+      <label class="form-label">Zdjęcie (opcjonalnie)</label>
+      <input type="file" accept="image/jpeg,image/png,image/webp" (change)="onImageSelected($event)" class="file-input" />
+      <p *ngIf="imageError" style="color:#dc2626;font-size:12px;margin-top:4px">{{ imageError }}</p>
+      <div class="image-preview" *ngIf="selectedImagePreview" style="margin-top:8px">
+        <img [src]="selectedImagePreview" alt="podgląd" style="max-width:100%;max-height:160px;border-radius:8px" />
+      </div>
+    </div>
 
     <div class="modal-actions">
       <button class="btn-cancel" (click)="closeModal()">Anuluj</button>

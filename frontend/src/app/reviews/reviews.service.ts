@@ -25,10 +25,15 @@ export class ReviewsService {
     return this.http.get<Review[]>(`${this.apiUrl}/reviews/my`);
   }
 
-  addReview(review: Review): Observable<Review> {
+  addReview(review: Review, image?: File): Observable<Review> {
+    const formData = new FormData();
+    formData.append('review', new Blob([JSON.stringify(review)], { type: 'application/json' }));
+    if (image) {
+      formData.append('image', image);
+    }
     return this.http.post<Review>(
       `${this.apiUrl}/places/${review.place_id}/reviews`,
-      review
+      formData
     );
   }
 }

@@ -103,7 +103,8 @@
 
     <div class="form-group">
       <label class="form-label">Zdjęcie (opcjonalnie)</label>
-      <input type="file" accept="image/*" (change)="onImageSelected($event)" class="file-input" />
+      <input type="file" accept="image/jpeg,image/png,image/webp" (change)="onImageSelected($event)" class="file-input" />
+      <p class="error-msg" *ngIf="imageError" style="color:#dc2626;font-size:12px;margin-top:4px">{{ imageError }}</p>
       <div class="image-preview" *ngIf="selectedImagePreview">
         <img [src]="selectedImagePreview" alt="podgląd" />
       </div>

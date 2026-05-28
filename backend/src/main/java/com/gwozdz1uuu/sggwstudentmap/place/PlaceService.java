@@ -1,8 +1,13 @@
 package com.gwozdz1uuu.sggwstudentmap.place;
 
 import com.gwozdz1uuu.sggwstudentmap.review.ReviewRepository;
+import com.gwozdz1uuu.sggwstudentmap.storage.StorageService;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,7 +22,8 @@ public class PlaceService {
 
     private final PlaceRepository placeRepository;
     private final ReviewRepository reviewRepository;
-    private final PlacePendingRepository placePendingRepository;    
+    private final PlacePendingRepository placePendingRepository;
+    private final StorageService storageService;
 
     public List<PlaceResponse> getAllPlaces() {
         return getAllPlaces(PlaceSortOption.RECENT, null, false, null);
@@ -88,11 +94,30 @@ public class PlaceService {
     }
 
     public boolean deletePlace(Integer id) {
-        if (placeRepository.existsById(id)) {
+        Optional<Place> placeOpt = placeRepository.findById(id);
+        if (placeOpt.isPresent()) {
+            String imageUrl = placeOpt.get().getImageUrl();
             placeRepository.deleteById(id);
+            storageService.delete(imageUrl);
             return true;
         }
         return false;
+    }
+
+    @Transactional
+    public PlaceResponse uploadPlaceImage(Integer placeId, MultipartFile image) {
+        Place place = placeRepository.findById(placeId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Place not found"));
+
+        String oldImageUrl = place.getImageUrl();
+        String newImageUrl = storageService.upload(image, "places", placeId);
+        place.setImageUrl(newImageUrl);
+        placeRepository.save(place);
+
+        storageService.delete(oldImageUrl);
+
+        Double avgRating = reviewRepository.findAverageRatingByPlaceId(placeId).orElse(null);
+        return PlaceResponse.from(place, avgRating);
     }
 
     public Optional<NavigationResponse> getNavigation(Integer placeId) {
@@ -161,7 +186,10 @@ public class PlaceService {
             place.setDescription(pending.getDescription());
             placeRepository.save(place);
         } else if (pending.getActionType() == PendingActionType.DELETE) {
+            String imageUrl = placeRepository.findById(pending.getPlaceId())
+                    .map(Place::getImageUrl).orElse(null);
             placeRepository.deleteById(pending.getPlaceId());
+            storageService.delete(imageUrl);
         } else if (pending.getActionType() == PendingActionType.UPDATE) {
             placeRepository.findById(pending.getPlaceId()).ifPresent(place -> {
                 place.setName(pending.getName());

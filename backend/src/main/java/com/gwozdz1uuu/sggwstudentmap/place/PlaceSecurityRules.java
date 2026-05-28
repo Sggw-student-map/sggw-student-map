@@ -16,6 +16,7 @@ public class PlaceSecurityRules implements SecurityRules {
                 .requestMatchers(HttpMethod.OPTIONS, "/api/places", "/api/places/**").permitAll()
                 // tworzenie i usuwanie miejsc 
                 .requestMatchers(HttpMethod.POST, "/api/places").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/places/*/image").hasAnyRole("ADMIN", "APPROVER")
                 .requestMatchers(HttpMethod.DELETE, "/api/places/**").authenticated()
                 .requestMatchers(HttpMethod.PUT, "/api/places/**").authenticated()
                  // pending - tylko ADMIN lub `APPROVER`

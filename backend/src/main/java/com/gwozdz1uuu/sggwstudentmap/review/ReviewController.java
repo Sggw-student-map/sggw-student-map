@@ -2,8 +2,10 @@ package com.gwozdz1uuu.sggwstudentmap.review;
 
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -33,9 +35,12 @@ public class ReviewController {
         return ResponseEntity.ok(reviewService.getReviewsByPlace(placeId));
     }
 
-    @PostMapping("/places/{placeId}/reviews")
-    public ResponseEntity<Review> addReview(@PathVariable Integer placeId, @RequestBody Review review) {
+    @PostMapping(value = "/places/{placeId}/reviews", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Review> addReview(
+            @PathVariable Integer placeId,
+            @RequestPart("review") Review review,
+            @RequestPart(value = "image", required = false) MultipartFile image) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(reviewService.addReview(placeId, review));
+                .body(reviewService.addReview(placeId, review, image));
     }
 }
