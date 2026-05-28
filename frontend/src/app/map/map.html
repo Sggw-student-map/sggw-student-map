@@ -333,6 +333,14 @@
       </div>
     </div>
 
+    <!-- Upload image error toast -->
+    <div *ngIf="uploadImageError"
+         class="absolute top-24 left-1/2 -translate-x-1/2 pointer-events-auto z-[850]">
+      <div class="bg-white/90 backdrop-blur-md rounded-2xl shadow-xl border border-red-200/60 px-5 py-2.5 text-sm text-red-700 font-medium">
+        {{ uploadImageError }}
+      </div>
+    </div>
+
     <!-- Locate-me error toast -->
     <div *ngIf="locateError"
          class="absolute top-24 left-1/2 -translate-x-1/2 pointer-events-auto z-[850]">
@@ -399,4 +407,7 @@
     </div>
 
   </div>
+
+  <input #placeImageInput type="file" accept="image/jpeg,image/png,image/webp"
+         style="display:none" (change)="onPlaceImageSelected($event)" />
 </div>

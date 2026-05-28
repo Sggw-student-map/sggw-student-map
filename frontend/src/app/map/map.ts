@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -27,11 +27,14 @@ const EVENT_PAST_TOLERANCE_MS = 24 * 60 * 60 * 1000;
   styleUrl: './map.css',
 })
 export class Map implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild('placeImageInput') placeImageInput!: ElementRef<HTMLInputElement>;
+
   private map!: L.Map;
   private markerLayer = L.layerGroup();
   private popupOpenHandler!: (e: L.PopupEvent) => void;
   private markerMap: { [id: number]: L.Marker } = {};
   private searchSubject = new Subject<string>();
+  private pendingImagePlaceId: number | null = null;
 
   searchQuery = '';
   searchResults: PlacePin[] = [];
@@ -57,6 +60,7 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
 
   locating = false;
   locateError = '';
+  uploadImageError = '';
   private userLocationMarker?: L.Marker;
   private userLocationAccuracyCircle?: L.Circle;
 
@@ -66,10 +70,10 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
     { id: 'LOWEST_RATED', label: 'Najniżej oceniane', description: 'Pokaż najgorzej oceniane', dotClass: 'bg-orange-200' },
   ];
 
-  selectedSort: PlaceSortOption = 'RECENT';
+  selectedSort: PlaceSortOption = 'HIGHEST_RATED';
   minRating = 0;
-  onlyRated = false;
-  limit: number | null = null;
+  onlyRated = true;
+  limit: number | null = 20;
   readonly limitOptions: { value: number | null; label: string }[] = [
     { value: null, label: 'Wszystkie' },
     { value: 5, label: '5' },
@@ -528,8 +532,12 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
           Dodaj post z tego miejsca
         </button>
         <button class="delete-pin-btn" data-place-id="${pin.id}" style="margin-top:5px;width:100%;padding:7px;background:#fee2e2;color:#b91c1c;border:none;border-radius:8px;cursor:pointer;">
-          Usuń pinezkę
+          Zgłoś usunięcie pinezki
         </button>
+        ${this.canApprovePlaces ? `
+        <button class="upload-place-img-btn" data-place-id="${pin.id}" style="margin-top:5px;width:100%;padding:7px;background:#f3e8ff;color:#7c3aed;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:12px">
+          📷 ${pin.imageUrl ? 'Zmień zdjęcie' : 'Dodaj zdjęcie'}
+        </button>` : ''}
       </div>`;
   }
 
@@ -775,6 +783,33 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  private triggerPlaceImageUpload(placeId: number): void {
+    this.pendingImagePlaceId = placeId;
+    this.placeImageInput.nativeElement.value = '';
+    this.placeImageInput.nativeElement.click();
+  }
+
+  onPlaceImageSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file || !this.pendingImagePlaceId) return;
+
+    const maxSize = 5 * 1024 * 1024;
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowed.includes(file.type) || file.size > maxSize) return;
+
+    const placeId = this.pendingImagePlaceId;
+    this.pendingImagePlaceId = null;
+    this.map.closePopup();
+
+    this.placeService.uploadImage(placeId, file).subscribe({
+      next: () => this.loadPins(),
+      error: () => {
+        this.uploadImageError = 'Nie udało się przesłać zdjęcia. Spróbuj ponownie.';
+        setTimeout(() => this.uploadImageError = '', 4000);
+      }
+    });
+  }
+
   private escapeHtml(text: string): string {
     const div = document.createElement('div');
     div.textContent = text;
@@ -840,6 +875,17 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
           deleteBtn.addEventListener('click', (ev: Event) => {
             ev.stopPropagation();
             this.deletePin(placeId);
+          });
+        }
+      }
+
+      const uploadImgBtn = container.querySelector('.upload-place-img-btn') as HTMLElement | null;
+      if (uploadImgBtn) {
+        const placeId = Number(uploadImgBtn.getAttribute('data-place-id'));
+        if (placeId) {
+          uploadImgBtn.addEventListener('click', (ev: Event) => {
+            ev.stopPropagation();
+            this.triggerPlaceImageUpload(placeId);
           });
         }
       }
