@@ -18,6 +18,7 @@ export interface PlacePin {
   latitude: number;
   longitude: number;
   description?: string;
+  imageUrl?: string | null;
   averageRating?: number | null;
 }
 
@@ -95,5 +96,11 @@ export class PlaceService {
 
   reject(id: number): Observable<any> {
     return this.http.post<any>(`${this.url}/pending/${id}/reject`, {});
+  }
+
+  uploadImage(placeId: number, image: File): Observable<PlacePin> {
+    const formData = new FormData();
+    formData.append('image', image);
+    return this.http.post<PlacePin>(`${this.url}/${placeId}/image`, formData);
   }
 }

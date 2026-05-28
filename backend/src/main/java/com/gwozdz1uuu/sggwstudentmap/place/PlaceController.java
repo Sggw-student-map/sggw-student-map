@@ -3,15 +3,16 @@ package com.gwozdz1uuu.sggwstudentmap.place;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.Map;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import com.gwozdz1uuu.sggwstudentmap.auth.AuthService;
-import com.gwozdz1uuu.sggwstudentmap.user.UserRepository;
 
 @RestController
 @RequestMapping("/api/places")
@@ -73,6 +74,14 @@ public class PlaceController {
         placeService.requestDeletePlace(id, user.getId());
         return ResponseEntity.accepted()
                 .body(Map.of("message", "Zgłoszenie usunięcia dodane do zatwierdzenia"));
+    }
+
+    @PostMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN', 'APPROVER')")
+    public ResponseEntity<PlaceResponse> uploadImage(
+            @PathVariable Integer id,
+            @RequestPart("image") MultipartFile image) {
+        return ResponseEntity.ok(placeService.uploadPlaceImage(id, image));
     }
 
     @GetMapping("/{id}/navigation")

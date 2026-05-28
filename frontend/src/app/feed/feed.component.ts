@@ -64,7 +64,12 @@ export class FeedComponent implements OnInit {
   newPostContent = '';
   newPostPlaceId: number | null = null;
   selectedImagePreview = '';
+  selectedImageFile: File | null = null;
+  imageError = '';
   submitting = false;
+
+  private static readonly MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+  private static readonly ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
   private static readonly AVATAR_PALETTE: ReadonlyArray<{ bg: string; color: string }> = [
     { bg: '#E6F1FB', color: '#0C447C' },
@@ -121,11 +126,19 @@ export class FeedComponent implements OnInit {
   onImageSelected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      this.selectedImagePreview = reader.result as string;
-    };
-    reader.readAsDataURL(file);
+    this.imageError = '';
+
+    if (!FeedComponent.ALLOWED_TYPES.includes(file.type)) {
+      this.imageError = 'Dozwolone formaty: JPEG, PNG, WebP.';
+      return;
+    }
+    if (file.size > FeedComponent.MAX_FILE_SIZE) {
+      this.imageError = 'Maksymalny rozmiar pliku: 5 MB.';
+      return;
+    }
+
+    this.selectedImageFile = file;
+    this.selectedImagePreview = URL.createObjectURL(file);
   }
 
   toggleLike(post: PostVM): void {
@@ -188,10 +201,9 @@ export class FeedComponent implements OnInit {
     const body: CreatePostRequest = {
       content,
       placeId: this.newPostPlaceId ?? null,
-      imageUrl: this.selectedImagePreview || null
     };
 
-    this.feedService.createPost(body).subscribe({
+    this.feedService.createPost(body, this.selectedImageFile ?? undefined).subscribe({
       next: (created) => {
         this.posts.unshift(this.toPostVm(created));
         this.closeModal();
@@ -213,10 +225,15 @@ export class FeedComponent implements OnInit {
   }
 
   closeModal(): void {
+    if (this.selectedImagePreview) {
+      URL.revokeObjectURL(this.selectedImagePreview);
+    }
     this.showModal = false;
     this.newPostContent = '';
     this.newPostPlaceId = null;
     this.selectedImagePreview = '';
+    this.selectedImageFile = null;
+    this.imageError = '';
   }
 
   trackById(_: number, post: PostVM): number {

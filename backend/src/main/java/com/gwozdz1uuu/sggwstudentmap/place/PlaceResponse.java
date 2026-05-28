@@ -6,6 +6,7 @@ public record PlaceResponse(
         Double latitude,
         Double longitude,
         String description,
+        String imageUrl,
         Double averageRating
 ) {
     public static PlaceResponse from(Place place, Double averageRating) {
@@ -15,6 +16,7 @@ public record PlaceResponse(
                 place.getLatitude(),
                 place.getLongitude(),
                 place.getDescription(),
+                place.getImageUrl(),
                 averageRating != null ? Math.round(averageRating * 10.0) / 10.0 : null
         );
     }

@@ -505,8 +505,13 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
 
     const eventsHtml = events.length > 0 ? this.buildEventsBlockHtml(events) : '';
 
+    const imageHtml = pin.imageUrl
+      ? `<img src="${this.escapeHtml(pin.imageUrl)}" alt="" style="width:100%;max-height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px" />`
+      : '';
+
     return `
       <div style="min-width:190px;font-family:system-ui,sans-serif">
+        ${imageHtml}
         <div style="font-weight:700;font-size:14px;margin-bottom:5px">${name}</div>
         ${ratingHtml}
         ${desc ? `<div style="color:#555;font-size:12px;margin-bottom:8px">${desc}</div>` : ''}
