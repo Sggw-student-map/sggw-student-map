@@ -49,8 +49,7 @@ public class UserService {
         user.setUsername(request.username());
         user.setEmail(request.email());
         user.setPassword(passwordEncoder.encode(request.password()));
-        // TODO: przywrocic weryfikacje emailem - chwilowo pomijamy
-        user.setIsActive(true);
+        user.setIsActive(false);
 
         var saved = userRepository.save(user);
 
@@ -61,10 +60,10 @@ public class UserService {
         settings.setIdUser(saved.getId());
         userSettingsRepository.save(settings);
 
-//        String token = java.util.UUID.randomUUID().toString();
-//        UserVerificationToken verificationToken = new UserVerificationToken(token, saved);
-//        tokenRepository.save(verificationToken);
-//        emailService.sendVerificationEmail(saved.getEmail(), token);
+        String token = java.util.UUID.randomUUID().toString();
+        UserVerificationToken verificationToken = new UserVerificationToken(token, saved);
+        tokenRepository.save(verificationToken);
+        emailService.sendVerificationEmail(saved.getEmail(), token);
 
         return UserResponse.from(saved);
     }
