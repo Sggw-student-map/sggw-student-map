@@ -18,6 +18,7 @@ export interface PlacePin {
   latitude: number;
   longitude: number;
   description?: string;
+  imageUrl?: string | null;
   averageRating?: number | null;
 }
 
@@ -69,19 +70,37 @@ export class PlaceService {
     return this.http.get<PlacePin>(`${this.url}/${id}`);
   }
 
-  create(request: CreatePlaceRequest): Observable<PlacePin> {
-    return this.http.post<PlacePin>(this.url, request);
+  create(request: CreatePlaceRequest): Observable<any> {
+    return this.http.post<any>(this.url, request);
+  }
+
+  delete(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.url}/${id}`);
   }
 
   update(id: number, request: CreatePlaceRequest): Observable<PlacePin> {
     return this.http.put<PlacePin>(`${this.url}/${id}`, request);
   }
 
-  delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.url}/${id}`);
-  }
-
   getNavigation(id: number): Observable<NavigationResponse> {
     return this.http.get<NavigationResponse>(`${this.url}/${id}/navigation`);
+  }
+
+  getPending(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.url}/pending`);
+  }
+
+  approve(id: number): Observable<any> {
+    return this.http.post<any>(`${this.url}/pending/${id}/approve`, {});
+  }
+
+  reject(id: number): Observable<any> {
+    return this.http.post<any>(`${this.url}/pending/${id}/reject`, {});
+  }
+
+  uploadImage(placeId: number, image: File): Observable<PlacePin> {
+    const formData = new FormData();
+    formData.append('image', image);
+    return this.http.post<PlacePin>(`${this.url}/${placeId}/image`, formData);
   }
 }

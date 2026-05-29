@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -17,7 +17,6 @@ interface SortOptionConfig {
 }
 
 const HIGHLIGHT_RATING_THRESHOLD = 4.5;
-// Wydarzenie liczy się jako "aktualne", jeśli jego data jest nie wcześniej niż 24h temu
 const EVENT_PAST_TOLERANCE_MS = 24 * 60 * 60 * 1000;
 
 @Component({
@@ -28,11 +27,14 @@ const EVENT_PAST_TOLERANCE_MS = 24 * 60 * 60 * 1000;
   styleUrl: './map.css',
 })
 export class Map implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild('placeImageInput') placeImageInput!: ElementRef<HTMLInputElement>;
+
   private map!: L.Map;
   private markerLayer = L.layerGroup();
   private popupOpenHandler!: (e: L.PopupEvent) => void;
   private markerMap: { [id: number]: L.Marker } = {};
   private searchSubject = new Subject<string>();
+  private pendingImagePlaceId: number | null = null;
 
   searchQuery = '';
   searchResults: PlacePin[] = [];
@@ -52,8 +54,13 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
   deleteError = '';
   deleting = false;
 
+  showPendingMessage = false;
+  canApprovePlaces = false;
+  pendingPlaces: any[] = [];
+
   locating = false;
   locateError = '';
+  uploadImageError = '';
   private userLocationMarker?: L.Marker;
   private userLocationAccuracyCircle?: L.Circle;
 
@@ -63,10 +70,10 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
     { id: 'LOWEST_RATED', label: 'Najniżej oceniane', description: 'Pokaż najgorzej oceniane', dotClass: 'bg-orange-200' },
   ];
 
-  selectedSort: PlaceSortOption = 'RECENT';
+  selectedSort: PlaceSortOption = 'HIGHEST_RATED';
   minRating = 0;
-  onlyRated = false;
-  limit: number | null = null;
+  onlyRated = true;
+  limit: number | null = 20;
   readonly limitOptions: { value: number | null; label: string }[] = [
     { value: null, label: 'Wszystkie' },
     { value: 5, label: '5' },
@@ -91,24 +98,49 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
   ) {}
 
   private goToFeedAndCreatePost(placeId: number): void {
-  this.router.navigate(['/feed'], { 
-    queryParams: { openNewPost: 'true', placeId: placeId } 
-  });
-}
+    this.router.navigate(['/feed'], {
+      queryParams: { openNewPost: 'true', placeId: placeId }
+    });
+  }
 
+  private deletePin(placeId: number): void {
+    this.placeService.delete(placeId).subscribe({
+      next: () => {
+        this.map.closePopup();
+        this.showPendingMessage = true;
+        setTimeout(() => this.showPendingMessage = false, 4000);
+      },
+      error: (err) => console.error('Błąd usuwania pinezki', err)
+    });
+  }
 
-private deletePin(placeId: number): void {
-  // Zakładając, że masz taką metodę w PlaceService. 
-  // Jeśli nie, musisz ją dodać w core/place.service.ts
-  this.placeService.delete(placeId).subscribe({
-    next: () => {
-      // Zamyka popup i przeładowuje pinezki
-      this.map.closePopup();
-      this.scheduleReload();
-    },
-    error: (err) => console.error('Błąd usuwania pinezki', err)
-  });
-}
+  loadPendingPlaces(): void {
+    this.placeService.getPending().subscribe({
+      next: (pending) => {
+        this.pendingPlaces = pending;
+        this.loadPins();
+      },
+      error: () => this.pendingPlaces = []
+    });
+  }
+
+  approvePlace(id: number): void {
+    this.placeService.approve(id).subscribe({
+      next: () => {
+        this.pendingPlaces = this.pendingPlaces.filter((p: any) => p.id !== id);
+        this.loadPins();
+      }
+    });
+  }
+
+  rejectPlace(id: number): void {
+    this.placeService.reject(id).subscribe({
+      next: () => {
+        this.pendingPlaces = this.pendingPlaces.filter((p: any) => p.id !== id);
+        this.loadPins();
+      }
+    });
+  }
 
   ngOnInit(): void {
     this.searchSubject.pipe(
@@ -124,6 +156,13 @@ private deletePin(placeId: number): void {
     ).subscribe(results => {
       this.searchResults = results;
       this.searchLoading = false;
+    });
+
+    this.userState.user$.subscribe((user: any) => {
+      this.canApprovePlaces = user?.role === 'ADMIN' || user?.role === 'APPROVER';
+      if (this.canApprovePlaces) {
+        this.loadPendingPlaces();
+      }
     });
 
     this.reloadSubject.pipe(debounceTime(150)).subscribe(() => this.loadPins());
@@ -163,17 +202,9 @@ private deletePin(placeId: number): void {
     }
   }
 
-  zoomIn(): void {
-    this.map.zoomIn(1);
-  }
-
-  zoomOut(): void {
-    this.map.zoomOut(1);
-  }
-
-  resetView(): void {
-    this.map.setView([52.161, 21.047], 16, { animate: true });
-  }
+  zoomIn(): void { this.map.zoomIn(1); }
+  zoomOut(): void { this.map.zoomOut(1); }
+  resetView(): void { this.map.setView([52.161, 21.047], 16, { animate: true }); }
 
   toggleAddPlaceMode(): void {
     this.addPlaceMode = !this.addPlaceMode;
@@ -208,30 +239,26 @@ private deletePin(placeId: number): void {
   }
 
   confirmDelete(): void {
-    if (!this.placeToDelete || this.deleting) {
-      return;
-    }
+    if (!this.placeToDelete || this.deleting) return;
     const id = this.placeToDelete.id;
     this.deleting = true;
-    this.deleteError = '';
     this.placeService.delete(id).subscribe({
       next: () => {
         this.deleting = false;
         this.placeToDelete = null;
         this.deletePlaceMode = false;
-        this.loadPins();
+        this.showPendingMessage = true;
+        setTimeout(() => this.showPendingMessage = false, 4000);
       },
       error: () => {
         this.deleting = false;
-        this.deleteError = 'Nie udało się usunąć miejsca. Zaloguj się i spróbuj ponownie.';
+        this.deleteError = 'Nie udało się usunąć miejsca.';
       },
     });
   }
 
   locateMe(): void {
-    if (this.locating) {
-      return;
-    }
+    if (this.locating) return;
     if (!('geolocation' in navigator)) {
       this.locateError = 'Twoja przeglądarka nie obsługuje geolokalizacji.';
       window.setTimeout(() => (this.locateError = ''), 3500);
@@ -244,9 +271,7 @@ private deletePin(placeId: number): void {
         this.locating = false;
         const { latitude, longitude, accuracy } = pos.coords;
         this.placeUserLocationMarker(latitude, longitude, accuracy);
-        this.map.flyTo([latitude, longitude], Math.max(this.map.getZoom(), 17), {
-          duration: 0.7,
-        });
+        this.map.flyTo([latitude, longitude], Math.max(this.map.getZoom(), 17), { duration: 0.7 });
       },
       (err) => {
         this.locating = false;
@@ -260,12 +285,8 @@ private deletePin(placeId: number): void {
   }
 
   private placeUserLocationMarker(lat: number, lng: number, accuracy: number): void {
-    if (this.userLocationMarker) {
-      this.map.removeLayer(this.userLocationMarker);
-    }
-    if (this.userLocationAccuracyCircle) {
-      this.map.removeLayer(this.userLocationAccuracyCircle);
-    }
+    if (this.userLocationMarker) this.map.removeLayer(this.userLocationMarker);
+    if (this.userLocationAccuracyCircle) this.map.removeLayer(this.userLocationAccuracyCircle);
 
     const userIcon = L.divIcon({
       className: 'user-location-icon',
@@ -324,12 +345,12 @@ private deletePin(placeId: number): void {
       this.formError = 'Nazwa jest wymagana';
       return;
     }
-
     this.placeService.create(this.newPlace).subscribe({
       next: () => {
+        this.showPendingMessage = true;
         this.cancelPlaceForm();
         this.addPlaceMode = false;
-        this.loadPins();
+        setTimeout(() => this.showPendingMessage = false, 4000);
       },
       error: () => {
         this.formError = 'Nie udało się dodać miejsca. Zaloguj się i spróbuj ponownie.';
@@ -379,12 +400,9 @@ private deletePin(placeId: number): void {
     this.searchQuery = place.name;
     this.searchResults = [];
     this.searchFocused = false;
-
     const marker = this.markerMap[place.id];
     if (marker) {
-      this.map.flyTo([place.latitude, place.longitude], Math.max(this.map.getZoom(), 17), {
-        duration: 0.6,
-      });
+      this.map.flyTo([place.latitude, place.longitude], Math.max(this.map.getZoom(), 17), { duration: 0.6 });
       marker.openPopup();
     }
   }
@@ -405,30 +423,20 @@ private deletePin(placeId: number): void {
   }
 
   get isSearchDropdownOpen(): boolean {
-    if (!this.searchFocused) {
-      return false;
-    }
-    if (this.hasSearchQuery) {
-      return true;
-    }
+    if (!this.searchFocused) return false;
+    if (this.hasSearchQuery) return true;
     return this.suggestedPlaces.length > 0;
   }
 
   private loadSuggestedPlaces(): void {
     this.placeService.getAll({ sort: 'HIGHEST_RATED', limit: 6 }).subscribe({
-      next: (places: PlacePin[]) => {
-        this.suggestedPlaces = places;
-      },
-      error: () => {
-        this.suggestedPlaces = [];
-      },
+      next: (places: PlacePin[]) => { this.suggestedPlaces = places; },
+      error: () => { this.suggestedPlaces = []; },
     });
   }
 
   selectSort(option: PlaceSortOption): void {
-    if (this.selectedSort === option) {
-      return;
-    }
+    if (this.selectedSort === option) return;
     this.selectedSort = option;
     this.scheduleReload();
   }
@@ -445,9 +453,7 @@ private deletePin(placeId: number): void {
   }
 
   selectLimit(value: number | null): void {
-    if (this.limit === value) {
-      return;
-    }
+    if (this.limit === value) return;
     this.limit = value;
     this.scheduleReload();
   }
@@ -503,36 +509,35 @@ private deletePin(placeId: number): void {
 
     const eventsHtml = events.length > 0 ? this.buildEventsBlockHtml(events) : '';
 
+    const imageHtml = pin.imageUrl
+      ? `<img src="${this.escapeHtml(pin.imageUrl)}" alt="" style="width:100%;max-height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px" />`
+      : '';
+
     return `
       <div style="min-width:190px;font-family:system-ui,sans-serif">
+        ${imageHtml}
         <div style="font-weight:700;font-size:14px;margin-bottom:5px">${name}</div>
         ${ratingHtml}
         ${desc ? `<div style="color:#555;font-size:12px;margin-bottom:8px">${desc}</div>` : ''}
         ${eventsHtml}
-        <button
-          class="nav-to-gmaps-btn"
-          data-place-id="${pin.id}"
-          style="
-            display:flex;align-items:center;gap:6px;
-            width:100%;padding:7px 12px;
-            color:#fff;
-            border:none;border-radius:8px;
-            font-size:12px;font-weight:600;
-            cursor:pointer;
-          "
-        >
+        <button class="nav-to-gmaps-btn" data-place-id="${pin.id}"
+          style="display:flex;align-items:center;gap:6px;width:100%;padding:7px 12px;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
             <circle cx="12" cy="9" r="2.5"/>
           </svg>
           Pokaż trasę w Google Maps
         </button>
-        <button class="add-post-btn" data-place-id="${pin.id}" style="margin-top:5px; width:100%; padding:7px; background:#e0f2fe; color:#0369a1; border:none; border-radius:8px; cursor:pointer;">
-        Dodaj post z tego miejsca
-      </button>
-      <button class="delete-pin-btn" data-place-id="${pin.id}" style="margin-top:5px; width:100%; padding:7px; background:#fee2e2; color:#b91c1c; border:none; border-radius:8px; cursor:pointer;">
-        Usuń pinezkę
-      </button>
+        <button class="add-post-btn" data-place-id="${pin.id}" style="margin-top:5px;width:100%;padding:7px;background:#e0f2fe;color:#0369a1;border:none;border-radius:8px;cursor:pointer;">
+          Dodaj post z tego miejsca
+        </button>
+        <button class="delete-pin-btn" data-place-id="${pin.id}" style="margin-top:5px;width:100%;padding:7px;background:#fee2e2;color:#b91c1c;border:none;border-radius:8px;cursor:pointer;">
+          Zgłoś usunięcie pinezki
+        </button>
+        ${this.canApprovePlaces ? `
+        <button class="upload-place-img-btn" data-place-id="${pin.id}" style="margin-top:5px;width:100%;padding:7px;background:#f3e8ff;color:#7c3aed;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:12px">
+          📷 ${pin.imageUrl ? 'Zmień zdjęcie' : 'Dodaj zdjęcie'}
+        </button>` : ''}
       </div>`;
   }
 
@@ -541,30 +546,17 @@ private deletePin(placeId: number): void {
       next: (nav: NavigationResponse) => {
         window.open(nav.googleMapsUrl, '_blank', 'noopener,noreferrer');
       },
-      error: () => {
-        console.error('Failed to get navigation for place', placeId);
-      },
+      error: () => { console.error('Failed to get navigation for place', placeId); },
     });
   }
 
-  /**
-   * Grupuje "aktualne" wydarzenia po miejscu. Wydarzenie liczy się jako aktualne,
-   * jeśli jego `dateOfEvent` jest nie wcześniej niż 24h temu (czyli również takie,
-   * które właśnie trwa lub odbywa się w przyszłości). Wewnątrz każdej grupy
-   * wydarzenia są posortowane chronologicznie.
-   *
-   * Używamy `Record` zamiast `Map<>`, ponieważ nazwa tej klasy (`Map`) przesłania
-   * globalny typ `Map` z ES2015.
-   */
   private groupCurrentEventsByPlace(events: EventResponse[]): Record<number, EventResponse[]> {
     const cutoff = Date.now() - EVENT_PAST_TOLERANCE_MS;
     const grouped: Record<number, EventResponse[]> = {};
 
     for (const ev of events) {
       const eventTime = new Date(ev.dateOfEvent).getTime();
-      if (Number.isNaN(eventTime) || eventTime < cutoff) {
-        continue;
-      }
+      if (Number.isNaN(eventTime) || eventTime < cutoff) continue;
       const list = grouped[ev.placeId] ?? [];
       list.push(ev);
       grouped[ev.placeId] = list;
@@ -578,11 +570,6 @@ private deletePin(placeId: number): void {
     return grouped;
   }
 
-  /**
-   * Tworzy `L.divIcon` zawierający bazową grafikę pinezki oraz badge informujący,
-   * że w danym miejscu odbywa się wydarzenie. Jeśli jest więcej niż jedno wydarzenie,
-   * w badge'u wyświetlana jest liczba zamiast gwiazdki.
-   */
   private buildEventBadgeIcon(baseIcon: L.Icon, eventCount: number): L.DivIcon {
     const opts = baseIcon.options;
     const iconUrl = opts.iconUrl as string;
@@ -605,9 +592,6 @@ private deletePin(placeId: number): void {
     });
   }
 
-  /**
-   * Sekcja popupu z najbliższymi wydarzeniami w danym miejscu (max 3).
-   */
   private buildEventsBlockHtml(events: EventResponse[]): string {
     const visible = events.slice(0, 3);
     const rows = visible.map((ev) => {
@@ -646,7 +630,6 @@ private deletePin(placeId: number): void {
     const tomorrow = new Date(now);
     tomorrow.setDate(now.getDate() + 1);
     const isTomorrow = date.toDateString() === tomorrow.toDateString();
-
     const time = date.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
     if (isSameDay) return `Dziś, ${time}`;
     if (isTomorrow) return `Jutro, ${time}`;
@@ -662,8 +645,6 @@ private deletePin(placeId: number): void {
       limit: this.limit,
     });
 
-    // Eventy wymagają zalogowanego użytkownika; w razie błędu (brak auth, sieć) traktujemy jak pustą listę,
-    // żeby pinezki i tak się załadowały.
     const events$ = this.eventService.getAllEvents().pipe(
       catchError(() => of([] as EventResponse[]))
     );
@@ -680,6 +661,7 @@ private deletePin(placeId: number): void {
         } else if (this.totalCount === 0) {
           this.totalCount = pins.length;
         }
+
         pins.forEach((pin) => {
           const placeEvents = eventsByPlace[pin.id] ?? [];
           const baseIcon = pin.averageRating != null && pin.averageRating >= HIGHLIGHT_RATING_THRESHOLD
@@ -692,23 +674,15 @@ private deletePin(placeId: number): void {
           let popupCloseAnimationTimeout: number | undefined;
 
           const clearCloseTimers = (): void => {
-            if (hoverCloseTimeout) {
-              window.clearTimeout(hoverCloseTimeout);
-              hoverCloseTimeout = undefined;
-            }
-            if (popupCloseAnimationTimeout) {
-              window.clearTimeout(popupCloseAnimationTimeout);
-              popupCloseAnimationTimeout = undefined;
-            }
+            if (hoverCloseTimeout) { window.clearTimeout(hoverCloseTimeout); hoverCloseTimeout = undefined; }
+            if (popupCloseAnimationTimeout) { window.clearTimeout(popupCloseAnimationTimeout); popupCloseAnimationTimeout = undefined; }
           };
 
           const closePopupWithAnimation = (): void => {
             const popupElement = marker.getPopup()?.getElement();
             if (popupElement) {
               popupElement.classList.remove('is-visible');
-              popupCloseAnimationTimeout = window.setTimeout(() => {
-                marker.closePopup();
-              }, 160);
+              popupCloseAnimationTimeout = window.setTimeout(() => { marker.closePopup(); }, 160);
               return;
             }
             marker.closePopup();
@@ -716,9 +690,7 @@ private deletePin(placeId: number): void {
 
           const scheduleClose = (): void => {
             clearCloseTimers();
-            hoverCloseTimeout = window.setTimeout(() => {
-              closePopupWithAnimation();
-            }, 120);
+            hoverCloseTimeout = window.setTimeout(() => { closePopupWithAnimation(); }, 120);
           };
 
           const marker = L.marker([pin.latitude, pin.longitude], { icon })
@@ -726,18 +698,14 @@ private deletePin(placeId: number): void {
             .addTo(this.markerLayer);
 
           marker.on('mouseover', () => {
-            if (this.deletePlaceMode) {
-              return;
-            }
+            if (this.deletePlaceMode) return;
             clearCloseTimers();
             marker.openPopup();
           });
           marker.on('mouseout', () => scheduleClose());
 
           marker.on('click', (event: L.LeafletMouseEvent) => {
-            if (!this.deletePlaceMode) {
-              return;
-            }
+            if (!this.deletePlaceMode) return;
             L.DomEvent.stopPropagation(event);
             clearCloseTimers();
             marker.closePopup();
@@ -748,7 +716,6 @@ private deletePin(placeId: number): void {
           marker.on('popupopen', (e: L.PopupEvent) => {
             const popupElement = e.popup.getElement();
             if (!popupElement) return;
-
             popupElement.classList.add('map-hover-popup');
             requestAnimationFrame(() => popupElement.classList.add('is-visible'));
             popupElement.addEventListener('mouseenter', clearCloseTimers);
@@ -764,12 +731,82 @@ private deletePin(placeId: number): void {
 
           this.markerMap[pin.id] = marker;
         });
+
+        if (this.canApprovePlaces && this.pendingPlaces.length > 0) {
+          this.pendingPlaces.forEach((pending: any) => {
+            const lat = pending.actionType === 'ADD' ? pending.latitude : null;
+            const lng = pending.actionType === 'ADD' ? pending.longitude : null;
+            const existingPin = pending.actionType === 'DELETE'
+              ? pins.find((p: any) => p.id === pending.placeId)
+              : null;
+            const finalLat = lat ?? existingPin?.latitude;
+            const finalLng = lng ?? existingPin?.longitude;
+            if (!finalLat || !finalLng) return;
+
+            const pendingIcon = L.divIcon({
+              className: 'pending-marker',
+              html: `<img src="${pending.actionType === 'ADD' ? '/orange-mark.svg' : '/transparent-mark.svg'}" width="25" height="41" />`,
+              iconSize: [25, 41],
+              iconAnchor: [12, 41],
+              popupAnchor: [1, -34],
+            });
+
+            const popupHtml = `
+              <div style="min-width:180px;font-family:system-ui,sans-serif">
+                <div style="font-weight:700;font-size:13px;margin-bottom:8px">
+                  ${pending.actionType === 'ADD' ? '➕ Zgłoszenie dodania' : '🗑️ Zgłoszenie usunięcia'}
+                </div>
+                <div style="font-size:12px;color:#555;margin-bottom:10px">
+                  ${pending.name ?? existingPin?.name ?? ''}
+                </div>
+                <button class="approve-btn" data-pending-id="${pending.id}"
+                  style="width:100%;padding:7px;background:#16a34a;color:#fff;border:none;border-radius:8px;cursor:pointer;margin-bottom:5px;font-weight:600">
+                  Zatwierdź
+                </button>
+                <button class="reject-btn" data-pending-id="${pending.id}"
+                  style="width:100%;padding:7px;background:#dc2626;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600">
+                  Odrzuć
+                </button>
+              </div>`;
+
+            L.marker([finalLat, finalLng], { icon: pendingIcon })
+              .bindPopup(popupHtml)
+              .addTo(this.markerLayer);
+          });
+        }
       },
       error: () => {
         this.markerLayer.clearLayers();
         this.markerMap = {};
         this.visibleCount = 0;
       },
+    });
+  }
+
+  private triggerPlaceImageUpload(placeId: number): void {
+    this.pendingImagePlaceId = placeId;
+    this.placeImageInput.nativeElement.value = '';
+    this.placeImageInput.nativeElement.click();
+  }
+
+  onPlaceImageSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file || !this.pendingImagePlaceId) return;
+
+    const maxSize = 5 * 1024 * 1024;
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowed.includes(file.type) || file.size > maxSize) return;
+
+    const placeId = this.pendingImagePlaceId;
+    this.pendingImagePlaceId = null;
+    this.map.closePopup();
+
+    this.placeService.uploadImage(placeId, file).subscribe({
+      next: () => this.loadPins(),
+      error: () => {
+        this.uploadImageError = 'Nie udało się przesłać zdjęcia. Spróbuj ponownie.';
+        setTimeout(() => this.uploadImageError = '', 4000);
+      }
     });
   }
 
@@ -797,14 +834,12 @@ private deletePin(placeId: number): void {
     L.tileLayer(
       'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       {
-        attribution:
-          'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-E nomenclature',
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-E nomenclature',
         maxZoom: 18,
       }
     ).addTo(this.map);
 
     this.markerLayer.addTo(this.map);
-
     this.map.on('click', (e: L.LeafletMouseEvent) => this.onMapClick(e));
 
     this.popupOpenHandler = (e: L.PopupEvent) => {
@@ -840,6 +875,41 @@ private deletePin(placeId: number): void {
           deleteBtn.addEventListener('click', (ev: Event) => {
             ev.stopPropagation();
             this.deletePin(placeId);
+          });
+        }
+      }
+
+      const uploadImgBtn = container.querySelector('.upload-place-img-btn') as HTMLElement | null;
+      if (uploadImgBtn) {
+        const placeId = Number(uploadImgBtn.getAttribute('data-place-id'));
+        if (placeId) {
+          uploadImgBtn.addEventListener('click', (ev: Event) => {
+            ev.stopPropagation();
+            this.triggerPlaceImageUpload(placeId);
+          });
+        }
+      }
+
+      const approveBtn = container.querySelector('.approve-btn') as HTMLElement | null;
+      if (approveBtn) {
+        const pendingId = Number(approveBtn.getAttribute('data-pending-id'));
+        if (pendingId) {
+          approveBtn.addEventListener('click', (ev: Event) => {
+            ev.stopPropagation();
+            this.map.closePopup();
+            this.approvePlace(pendingId);
+          });
+        }
+      }
+
+      const rejectBtn = container.querySelector('.reject-btn') as HTMLElement | null;
+      if (rejectBtn) {
+        const pendingId = Number(rejectBtn.getAttribute('data-pending-id'));
+        if (pendingId) {
+          rejectBtn.addEventListener('click', (ev: Event) => {
+            ev.stopPropagation();
+            this.map.closePopup();
+            this.rejectPlace(pendingId);
           });
         }
       }

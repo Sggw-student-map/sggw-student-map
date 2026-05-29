@@ -31,6 +31,9 @@ public class Place {
     @Column(name = "description", length = 1000)
     private String description;
 
+    @Column(name = "image_url", length = 1000)
+    private String imageUrl;
+
     @OneToMany(mappedBy = "place", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PlaceUrl> urls;
 }

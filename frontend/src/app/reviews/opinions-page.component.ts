@@ -22,6 +22,7 @@ export interface ReviewVM {
   placeName: string;
   placeId: number;
   placeImage?: string;
+  imageUrl?: string;
   comment: string;
 }
 
@@ -45,6 +46,12 @@ export class OpinionsPageComponent implements OnInit {
   modalPlaceId: number | null = null;
   hovered = 0;
   myReviewsMode = false;
+  selectedImageFile: File | null = null;
+  selectedImagePreview = '';
+  imageError = '';
+
+  private static readonly MAX_FILE_SIZE = 5 * 1024 * 1024;
+  private static readonly ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
   places: Place[] = [];
 
@@ -82,6 +89,7 @@ export class OpinionsPageComponent implements OnInit {
           rating: r.rating,
           placeName: 'Miejsce ' + r.place_id,
           placeId: r.place_id,
+          imageUrl: r.image_url ?? undefined,
           comment: r.comment
         };
       });
@@ -105,12 +113,36 @@ export class OpinionsPageComponent implements OnInit {
 
   openModal(): void { this.showModal = true; }
 
+  onImageSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.imageError = '';
+
+    if (!OpinionsPageComponent.ALLOWED_TYPES.includes(file.type)) {
+      this.imageError = 'Dozwolone formaty: JPEG, PNG, WebP.';
+      return;
+    }
+    if (file.size > OpinionsPageComponent.MAX_FILE_SIZE) {
+      this.imageError = 'Maksymalny rozmiar pliku: 5 MB.';
+      return;
+    }
+
+    this.selectedImageFile = file;
+    this.selectedImagePreview = URL.createObjectURL(file);
+  }
+
   closeModal(): void {
+    if (this.selectedImagePreview) {
+      URL.revokeObjectURL(this.selectedImagePreview);
+    }
     this.showModal = false;
     this.modalRating = 0;
     this.modalComment = '';
     this.modalPlaceId = null;
     this.hovered = 0;
+    this.selectedImageFile = null;
+    this.selectedImagePreview = '';
+    this.imageError = '';
   }
 
   submitReview(): void {
@@ -122,7 +154,7 @@ export class OpinionsPageComponent implements OnInit {
       comment: this.modalComment
     };
 
-    this.reviewsService.addReview(review).subscribe(() => {
+    this.reviewsService.addReview(review, this.selectedImageFile ?? undefined).subscribe(() => {
       this.loadReviews();
       this.closeModal();
     });

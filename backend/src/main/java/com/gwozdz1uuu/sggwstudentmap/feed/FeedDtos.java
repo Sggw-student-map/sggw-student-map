@@ -12,8 +12,7 @@ final class FeedDtos {
 
 record CreatePostRequest(
         Integer placeId,
-        @NotBlank @Size(max = 4000) String content,
-        String imageUrl
+        @NotBlank @Size(max = 4000) String content
 ) {}
 
 record CreateCommentRequest(

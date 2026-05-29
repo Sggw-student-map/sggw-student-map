@@ -3,13 +3,16 @@ package com.gwozdz1uuu.sggwstudentmap.place;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
-
+import java.util.Map;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import com.gwozdz1uuu.sggwstudentmap.auth.AuthService;
 
 @RestController
 @RequestMapping("/api/places")
@@ -18,6 +21,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Tag(name = "Miejsca", description = "Miejsca na mapie — lista, wyszukiwanie, CRUD, nawigacja")
 public class PlaceController {
     private final PlaceService placeService;
+    private final AuthService authService;
 
     @GetMapping
     public ResponseEntity<List<PlaceResponse>> getAllPlaces(
@@ -45,28 +49,39 @@ public class PlaceController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Place> createPlace(@Valid @RequestBody CreatePlaceRequest request) {
-        Place created = placeService.createPlace(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> createPlace(@Valid @RequestBody CreatePlaceRequest request) {
+        var user = authService.getCurrentUser();
+        placeService.requestAddPlace(request, user.getId());
+        return ResponseEntity.accepted()
+                .body(Map.of("message", "Zgłoszenie dodane do zatwierdzenia"));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','APPROVER')")
-    public ResponseEntity<Place> updatePlace(@PathVariable Integer id,
-                                             @Valid @RequestBody CreatePlaceRequest request) {
-        return placeService.updatePlace(id, request)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> updatePlace(@PathVariable Integer id,
+                                        @Valid @RequestBody CreatePlaceRequest request) {
+        var user = authService.getCurrentUser();
+        placeService.requestUpdatePlace(id, request, user.getId());
+        return ResponseEntity.accepted()
+                .body(Map.of("message", "Zgłoszenie edycji dodane do zatwierdzenia"));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deletePlace(@PathVariable Integer id) {
-        if (placeService.deletePlace(id)) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> deletePlace(@PathVariable Integer id) {
+        var user = authService.getCurrentUser();
+        placeService.requestDeletePlace(id, user.getId());
+        return ResponseEntity.accepted()
+                .body(Map.of("message", "Zgłoszenie usunięcia dodane do zatwierdzenia"));
+    }
+
+    @PostMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN', 'APPROVER')")
+    public ResponseEntity<PlaceResponse> uploadImage(
+            @PathVariable Integer id,
+            @RequestPart("image") MultipartFile image) {
+        return ResponseEntity.ok(placeService.uploadPlaceImage(id, image));
     }
 
     @GetMapping("/{id}/navigation")
@@ -74,5 +89,22 @@ public class PlaceController {
         return placeService.getNavigation(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/pending")
+    public ResponseEntity<List<PlacePending>> getPending() {
+        return ResponseEntity.ok(placeService.getPendingByStatus(PendingStatus.PENDING));
+    }
+
+    @PostMapping("/pending/{id}/approve")
+    public ResponseEntity<Void> approve(@PathVariable Integer id) {
+        placeService.approvePending(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/pending/{id}/reject")
+    public ResponseEntity<Void> reject(@PathVariable Integer id) {
+        placeService.rejectPending(id);
+        return ResponseEntity.noContent().build();
     }
 }

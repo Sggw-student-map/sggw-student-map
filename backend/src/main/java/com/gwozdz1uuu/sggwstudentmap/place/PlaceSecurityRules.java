@@ -14,10 +14,14 @@ public class PlaceSecurityRules implements SecurityRules {
                 // odczyt publiczny - mapa ma dzialac dla anonimow
                 .requestMatchers(HttpMethod.GET, "/api/places", "/api/places/**").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/api/places", "/api/places/**").permitAll()
-                // tworzenie i usuwanie miejsc - tylko ADMIN
-                .requestMatchers(HttpMethod.POST, "/api/places").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/places/**").hasRole("ADMIN")
-                // edycja miejsc - ADMIN lub APPROVER
-                .requestMatchers(HttpMethod.PUT, "/api/places/**").hasAnyRole("ADMIN", "APPROVER");
+                // tworzenie i usuwanie miejsc 
+                .requestMatchers(HttpMethod.POST, "/api/places").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/places/*/image").hasAnyRole("ADMIN", "APPROVER")
+                .requestMatchers(HttpMethod.DELETE, "/api/places/**").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/places/**").authenticated()
+                 // pending - tylko ADMIN lub `APPROVER`
+                .requestMatchers(HttpMethod.GET, "/api/places/pending").hasAnyRole("ADMIN", "APPROVER")
+                .requestMatchers(HttpMethod.POST, "/api/places/pending/*/approve").hasAnyRole("ADMIN", "APPROVER")
+                .requestMatchers(HttpMethod.POST, "/api/places/pending/*/reject").hasAnyRole("ADMIN", "APPROVER");
     }
 }

@@ -4,6 +4,7 @@ import com.gwozdz1uuu.sggwstudentmap.auth.AuthService;
 import com.gwozdz1uuu.sggwstudentmap.friendship.FriendshipRepository;
 import com.gwozdz1uuu.sggwstudentmap.place.PlaceRepository;
 import com.gwozdz1uuu.sggwstudentmap.settings.UserSettingsRepository;
+import com.gwozdz1uuu.sggwstudentmap.storage.StorageService;
 import com.gwozdz1uuu.sggwstudentmap.user.User;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -11,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -29,6 +31,7 @@ public class FeedService {
     private final AuthService authService;
     private final UserSettingsRepository userSettingsRepository;
     private final FriendshipRepository friendshipRepository;
+    private final StorageService storageService;
 
     public List<FeedPostResponse> getFeed(int page, int size) {
         Integer viewerId = currentUserIdOrZero();
@@ -43,7 +46,7 @@ public class FeedService {
     }
 
     @Transactional
-    public FeedPostResponse createPost(CreatePostRequest request) {
+    public FeedPostResponse createPost(CreatePostRequest request, MultipartFile image) {
         User me = requireCurrentUser();
 
         if (request.placeId() != null && !placeRepository.existsById(request.placeId())) {
@@ -54,8 +57,13 @@ public class FeedService {
                 .authorId(me.getId())
                 .placeId(request.placeId())
                 .content(request.content().trim())
-                .imageUrl(emptyToNull(request.imageUrl()))
                 .build());
+
+        if (image != null && !image.isEmpty()) {
+            String imageUrl = storageService.upload(image, "feed", saved.getId());
+            saved.setImageUrl(imageUrl);
+            postRepository.save(saved);
+        }
 
         FeedPostProjection projection = postRepository.findProjectionById(saved.getId(), me.getId());
         return toResponse(projection, me.getId());
@@ -70,7 +78,9 @@ public class FeedService {
         if (!post.getAuthorId().equals(me.getId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot delete somebody else's post");
         }
+        String imageUrl = post.getImageUrl();
         postRepository.delete(post);
+        storageService.delete(imageUrl);
     }
 
     @Transactional
@@ -227,12 +237,6 @@ public class FeedService {
     private FeedPost getPostOrThrow(Integer postId) {
         return postRepository.findById(postId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
-    }
-
-    private static String emptyToNull(String value) {
-        if (value == null) return null;
-        String trimmed = value.trim();
-        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private boolean canViewPost(Integer authorId, Integer viewerId) {

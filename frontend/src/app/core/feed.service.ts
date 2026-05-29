@@ -42,7 +42,6 @@ export interface FeedComment {
 export interface CreatePostRequest {
   placeId?: number | null;
   content: string;
-  imageUrl?: string | null;
 }
 
 export interface CreateCommentRequest {
@@ -60,8 +59,13 @@ export class FeedService {
     return this.http.get<FeedPost[]>(this.base, { params });
   }
 
-  createPost(request: CreatePostRequest): Observable<FeedPost> {
-    return this.http.post<FeedPost>(this.base, request);
+  createPost(request: CreatePostRequest, image?: File): Observable<FeedPost> {
+    const formData = new FormData();
+    formData.append('post', new Blob([JSON.stringify(request)], { type: 'application/json' }));
+    if (image) {
+      formData.append('image', image);
+    }
+    return this.http.post<FeedPost>(this.base, formData);
   }
 
   deletePost(postId: number): Observable<void> {
