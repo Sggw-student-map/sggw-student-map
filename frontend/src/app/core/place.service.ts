@@ -8,6 +8,7 @@ export type PlaceSortOption = 'RECENT' | 'HIGHEST_RATED' | 'LOWEST_RATED';
 export interface PlaceQueryOptions {
   sort?: PlaceSortOption;
   minRating?: number;
+  maxRating?: number;
   onlyRated?: boolean;
   limit?: number | null;
 }
@@ -52,6 +53,9 @@ export class PlaceService {
     }
     if (options.minRating != null && options.minRating > 0) {
       params = params.set('minRating', options.minRating.toString());
+    }
+    if (options.maxRating != null && options.maxRating < 5) {
+      params = params.set('maxRating', options.maxRating.toString());
     }
     if (options.onlyRated) {
       params = params.set('onlyRated', 'true');

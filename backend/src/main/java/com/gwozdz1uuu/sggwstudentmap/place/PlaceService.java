@@ -26,12 +26,13 @@ public class PlaceService {
     private final StorageService storageService;
 
     public List<PlaceResponse> getAllPlaces() {
-        return getAllPlaces(PlaceSortOption.RECENT, null, false, null);
+        return getAllPlaces(PlaceSortOption.RECENT, null, null, false, null);
     }
 
     public List<PlaceResponse> getAllPlaces(
             PlaceSortOption sort,
             Double minRating,
+            Double maxRating,
             boolean onlyRated,
             Integer limit
     ) {
@@ -50,6 +51,11 @@ public class PlaceService {
         if (minRating != null) {
             double threshold = minRating;
             stream = stream.filter(p -> p.averageRating() != null && p.averageRating() >= threshold);
+        }
+
+        if (maxRating != null) {
+            double ceiling = maxRating;
+            stream = stream.filter(p -> p.averageRating() != null && p.averageRating() <= ceiling);
         }
 
         Stream<PlaceResponse> sorted = stream.sorted(effectiveSort.comparator());

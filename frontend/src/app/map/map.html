@@ -179,18 +179,34 @@
         <div class="space-y-3">
           <div>
             <div class="flex items-center justify-between mb-1.5">
-              <label class="text-xs font-semibold text-gray-700 uppercase tracking-wide">Minimalna ocena</label>
+              <label class="text-xs font-semibold text-gray-700 uppercase tracking-wide">Zakres ocen</label>
               <span class="flex items-center gap-1 text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
                 <span style="color:#f59e0b">★</span>
-                <ng-container *ngIf="minRating > 0; else anyRating">{{ minRating | number:'1.1-1' }}+</ng-container>
+                <ng-container *ngIf="minRating > 0 || maxRating < 5; else anyRating">
+                  {{ minRating | number:'1.1-1' }} – {{ maxRating | number:'1.1-1' }}
+                </ng-container>
                 <ng-template #anyRating>dowolna</ng-template>
               </span>
             </div>
-            <input type="range"
-                   min="0" max="5" step="0.5"
-                   [ngModel]="minRating"
-                   (ngModelChange)="onMinRatingChange($event)"
-                   class="rating-slider w-full">
+            <div class="dual-range-wrapper">
+              <div class="dual-range-track">
+                <div class="dual-range-fill"
+                     [style.left.%]="(minRating / 5) * 100"
+                     [style.right.%]="((5 - maxRating) / 5) * 100"></div>
+              </div>
+              <input type="range"
+                     min="0" max="5" step="0.5"
+                     [ngModel]="minRating"
+                     (ngModelChange)="onMinRatingChange($event)"
+                     [style.zIndex]="minSliderZIndex"
+                     class="dual-range-input">
+              <input type="range"
+                     min="0" max="5" step="0.5"
+                     [ngModel]="maxRating"
+                     (ngModelChange)="onMaxRatingChange($event)"
+                     style="z-index:4"
+                     class="dual-range-input">
+            </div>
             <div class="flex justify-between text-[10px] text-gray-400 mt-1 px-0.5 select-none">
               <span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
             </div>
