@@ -1,6 +1,7 @@
 package com.gwozdz1uuu.sggwstudentmap.auth.common;
 
 import com.gwozdz1uuu.sggwstudentmap.auth.jwt.JwtAuthenticationFilter;
+import com.gwozdz1uuu.sggwstudentmap.ratelimit.RateLimitingFilter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,6 +39,7 @@ public class SecurityConfig {
     private final UserDetailsService userDetailsService;
     private final LoggingFilter loggingFilter;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final RateLimitingFilter rateLimitingFilter;
     private final PasswordConfig passwordConfig;
     private final List<SecurityRules> featureSecurityRules;
 
@@ -64,6 +66,7 @@ public class SecurityConfig {
                     featureSecurityRules.forEach(rule -> rule.configure(c));
                     c.anyRequest().authenticated();
                 })
+                .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(loggingFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .headers(headers -> headers
