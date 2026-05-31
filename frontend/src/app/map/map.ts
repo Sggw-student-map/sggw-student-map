@@ -72,6 +72,7 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
 
   selectedSort: PlaceSortOption = 'HIGHEST_RATED';
   minRating = 0;
+  maxRating = 5;
   onlyRated = true;
   limit: number | null = 20;
   readonly limitOptions: { value: number | null; label: string }[] = [
@@ -443,8 +444,20 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
 
   onMinRatingChange(value: number | string): void {
     const parsed = typeof value === 'string' ? parseFloat(value) : value;
-    this.minRating = Number.isFinite(parsed) ? Math.max(0, Math.min(5, parsed)) : 0;
+    const clamped = Number.isFinite(parsed) ? Math.max(0, Math.min(5, parsed)) : 0;
+    this.minRating = Math.min(clamped, this.maxRating);
     this.scheduleReload();
+  }
+
+  onMaxRatingChange(value: number | string): void {
+    const parsed = typeof value === 'string' ? parseFloat(value) : value;
+    const clamped = Number.isFinite(parsed) ? Math.max(0, Math.min(5, parsed)) : 5;
+    this.maxRating = Math.max(clamped, this.minRating);
+    this.scheduleReload();
+  }
+
+  get minSliderZIndex(): number {
+    return this.minRating >= this.maxRating ? 5 : 3;
   }
 
   toggleOnlyRated(): void {
@@ -460,6 +473,7 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
 
   resetFilters(): void {
     this.minRating = 0;
+    this.maxRating = 5;
     this.onlyRated = false;
     this.selectedSort = 'RECENT';
     this.limit = null;
@@ -470,6 +484,7 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
     this.isRatingFilterActive =
       this.selectedSort !== 'RECENT' ||
       this.minRating > 0 ||
+      this.maxRating < 5 ||
       this.onlyRated ||
       this.limit !== null;
     this.reloadSubject.next();
@@ -641,6 +656,7 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
     const pins$ = this.placeService.getAll({
       sort: this.selectedSort,
       minRating: this.minRating,
+      maxRating: this.maxRating,
       onlyRated: this.onlyRated,
       limit: this.limit,
     });
