@@ -58,7 +58,9 @@ public class ActuatorSecurityChainConfig {
                         .frameOptions(f -> f.deny())
                         .contentTypeOptions(cto -> {})
                         .cacheControl(cc -> {})
-                        .referrerPolicy(rp -> rp.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER)));
+                        .referrerPolicy(rp -> rp.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER))
+                        .permissionsPolicyHeader(pp -> pp.policy(
+                                "geolocation=(), microphone=(), camera=()")));
 
         return http.build();
     }
