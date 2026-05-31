@@ -8,6 +8,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 /**
@@ -30,7 +31,13 @@ public class SwaggerUiSecurityChainConfig {
                 .cors(c -> c.configurationSource(corsConfigurationSource))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(c -> c.anyRequest().permitAll())
-                .headers(h -> h.frameOptions(frame -> frame.disable()));
+                .headers(h -> h
+                        .frameOptions(frame -> frame.disable())
+                        .contentTypeOptions(cto -> {})
+                        .referrerPolicy(rp -> rp.policy(
+                                ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                        .permissionsPolicyHeader(pp -> pp.policy(
+                                "geolocation=(), microphone=(), camera=()")));
         return http.build();
     }
 }

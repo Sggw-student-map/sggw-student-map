@@ -19,6 +19,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -65,6 +66,13 @@ public class SecurityConfig {
                 })
                 .addFilterBefore(loggingFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .headers(headers -> headers
+                        .frameOptions(frame -> frame.sameOrigin())
+                        .contentTypeOptions(cto -> {})
+                        .referrerPolicy(rp -> rp.policy(
+                                ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                        .permissionsPolicyHeader(pp -> pp.policy(
+                                "geolocation=(), microphone=(), camera=()")))
                 .exceptionHandling(c-> {
                     c.authenticationEntryPoint(authenticationEntryPoint());
                     c.accessDeniedHandler((request, response, accessDeniedException) -> {
