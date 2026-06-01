@@ -52,7 +52,15 @@ export class EventsComponent implements OnInit {
 
   loadEvents(): void {
     this.eventService.getAllEvents().subscribe({
-      next: (data) => { this.events = data.map(e => this.mapToVM(e)); },
+      next: (data) => { 
+        const mappedEvents = data.map(e => this.mapToVM(e));
+        
+        this.events = mappedEvents.sort((a, b) => {
+          const dateA = new Date(a.dateOfEvent).getTime();
+          const dateB = new Date(b.dateOfEvent).getTime();
+          return dateB - dateA;
+        });
+      },
       error: (err) => console.error('Błąd:', err)
     });
   }

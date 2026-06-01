@@ -75,10 +75,26 @@ export class OpinionsPageComponent implements OnInit {
       : this.reviewsService.getAllReviews();
 
     source$.subscribe((data: Review[]) => {
-      this.reviews = data.map(r => {
+      const sortedData = data.sort((a, b) => {
+        const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return dateB - dateA;
+      });
+
+      this.reviews = sortedData.map(r => {
         const authorName = r.author || 'Anonim';
         const initials = authorName.substring(0, 2).toUpperCase();
-        const time = r.created_at ? new Date(r.created_at).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }) : '';
+        
+        const time = r.created_at 
+          ? new Date(r.created_at).toLocaleString('pl-PL', { 
+              day: '2-digit', 
+              month: '2-digit', 
+              year: 'numeric', 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            }) 
+          : '';
+
         return {
           id: r.id || 0,
           author: authorName,
