@@ -159,7 +159,6 @@ export class Register implements OnInit, OnDestroy {
           this.isLoading = false;
           this.isRegistrationSuccessful = true;
           this.successMessage = 'Konto zostało pomyślnie utworzone! Sprawdź swoją skrzynkę e-mail, aby potwierdzić rejestrację.';
-          setTimeout(() => this.router.navigate(['/login']), 900);
         },
         error: (err) => {
           this.isLoading = false;
