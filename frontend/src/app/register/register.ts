@@ -29,6 +29,7 @@ export class Register implements OnInit, OnDestroy {
   isLoading = false;
   errorMessage = '';
   successMessage = '';
+  isRegistrationSuccessful = false;
 
   readonly slides: CampusSlide[] = [
     {
@@ -156,33 +157,23 @@ export class Register implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.isLoading = false;
-          this.successMessage = 'Konto utworzone. Za chwilę nastąpi przekierowanie do logowania.';
+          this.isRegistrationSuccessful = true;
+          this.successMessage = 'Konto zostało pomyślnie utworzone! Sprawdź swoją skrzynkę e-mail, aby potwierdzić rejestrację.';
           setTimeout(() => this.router.navigate(['/login']), 900);
         },
         error: (err) => {
           this.isLoading = false;
 
-          if (err.status === 400 && err.error && err.error.details) {
-            let hasSpecificErrors = false;
-            const serverErrors = err.error.details;
-
-            for (const field of Object.keys(serverErrors)) {
-              const control = this.registerForm.get(field);
-
-              if (control) {
-                control.setErrors({ serverError: serverErrors[field] });
-                control.markAsTouched();
-                hasSpecificErrors = true;
-              }
-            }
-
-            if (!hasSpecificErrors) {
-              this.errorMessage = err.error.message || 'Nie udało się założyć konta ze względu na nieprawidłowe dane.';
-            }
+          if (err.status === 400) {
+            this.errorMessage = 'Wprowadzone dane są niepoprawne.';
           } else {
             this.errorMessage = 'Wystąpił błąd serwera. Spróbuj ponownie później.';
           }
         }
       });
   }
+  goToLogin(): void {
+    this.router.navigate(['/login']);
+  }
+  
 }
