@@ -85,7 +85,7 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
 
   visibleCount = 0;
   totalCount = 0;
-  isRatingFilterActive = false;
+  isRatingFilterActive = true;
 
   private blueIcon!: L.Icon;
   private highlightIcon!: L.Icon;
@@ -163,6 +163,14 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
       this.canApprovePlaces = user?.role === 'ADMIN' || user?.role === 'APPROVER';
       if (this.canApprovePlaces) {
         this.loadPendingPlaces();
+      }
+    });
+
+    this.reloadSubject.pipe(debounceTime(150)).subscribe(() => this.loadPins());
+
+    this.placeService.getAll({ minRating: 0, maxRating: 5, onlyRated: false, limit: null }).subscribe({
+      next: (allPins) => {
+        this.totalCount = allPins.length;
       }
     });
 
@@ -672,11 +680,6 @@ export class Map implements OnInit, AfterViewInit, OnDestroy {
         this.markerLayer.clearLayers();
         this.markerMap = {};
         this.visibleCount = pins.length;
-        if (!this.isRatingFilterActive) {
-          this.totalCount = pins.length;
-        } else if (this.totalCount === 0) {
-          this.totalCount = pins.length;
-        }
 
         pins.forEach((pin) => {
           const placeEvents = eventsByPlace[pin.id] ?? [];
