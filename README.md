@@ -33,7 +33,7 @@ SGGW Student Map is an interactive, community-driven platform built by students 
 ## Twórcy
 
 
-* **Daniel Gwozdecki** – [GitHub](https://github.com/Gwozdziuuu) / [LinkedIn](http://linkedin.com/in/daniel-alex-gwozdecki-27754a371/) / [Email](mailto:gwozdeckidaniel@gmail.com)
+* **Daniel Gwozdecki** – [GitHub](https://github.com/Gwozdz1uuu) / [LinkedIn](http://linkedin.com/in/daniel-alex-gwozdecki-27754a371/) / [Email](mailto:gwozdeckidaniel@gmail.com)
 * **Maja Szerszeń** – [GitHub](https://github.com/majsz) / [LeetCode](https://leetcode.com/u/majsz/) / [Email](mailto:maja.szerszen.7@gmail.com)
 * **Maciej Dąbrowski** – [GitHub](https://github.com/MD04-CFC) / [LinkedIn](https://www.linkedin.com/in/maciej-dabrowski-61a80435a/) / [Email](mailto:maciek.dabrowski.2004@gmail.com)
 * **Jakub Dąbrowski** – [GitHub](https://github.com/jakubdabrowskii) / [Email](mailto:jakubdabrowski818@gmail.com)
